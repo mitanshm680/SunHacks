@@ -118,7 +118,7 @@ export function AIScheduler() {
     await new Promise((resolve) => setTimeout(resolve, 2000))
 
     // In a real app, this would call an AI service
-    const newSessions = [
+    const newSessions: StudySession[] = [
       ...studySessions,
       {
         id: Date.now().toString(),
@@ -128,11 +128,11 @@ export function AIScheduler() {
         startTime: new Date(2024, 11, 19, 13, 0),
         endTime: new Date(2024, 11, 19, 15, 0),
         duration: 120,
-        priority: "high",
-        type: "focused",
+        priority: "high" as const,
+        type: "focused" as const,
         confidence: 89,
         reasoning: "Afternoon slot ideal for creative writing. Sufficient time before deadline.",
-        status: "suggested",
+        status: "suggested" as const,
       },
     ]
 
