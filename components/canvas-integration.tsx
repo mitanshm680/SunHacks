@@ -139,7 +139,194 @@ const mockAssignments: CanvasAssignment[] = [
   },
 ]
 
+// ---------------- iCal parsing and conversion helpers ----------------
+import { useEffect } from 'react'
+
+interface ParsedCalendarEvent {
+  id: string
+  title: string
+  description: string
+  startDate: Date
+  endDate: Date
+  location?: string
+  url?: string
+}
+
+function parseICalDate(dateStr: string): Date {
+  // Handle different iCal date formats
+  if (dateStr.includes('T')) {
+    // DateTime format: 20241220T235900Z or without Z
+    const year = parseInt(dateStr.substring(0, 4))
+    const month = parseInt(dateStr.substring(4, 6)) - 1
+    const day = parseInt(dateStr.substring(6, 8))
+    const hour = parseInt(dateStr.substring(9, 11))
+    const minute = parseInt(dateStr.substring(11, 13))
+    const second = parseInt(dateStr.substring(13, 15))
+
+    if (dateStr.endsWith('Z')) {
+      return new Date(Date.UTC(year, month, day, hour, minute, second))
+    } else {
+      return new Date(year, month, day, hour, minute, second)
+    }
+  } else {
+    // Date only format: 20241220
+    const year = parseInt(dateStr.substring(0, 4))
+    const month = parseInt(dateStr.substring(4, 6)) - 1
+    const day = parseInt(dateStr.substring(6, 8))
+    return new Date(year, month, day)
+  }
+}
+
+function parseICalendar(icsData: string): ParsedCalendarEvent[] {
+  const events: ParsedCalendarEvent[] = []
+  const lines = icsData.split(/\r?\n/)
+  let currentEvent: Partial<ParsedCalendarEvent> = {}
+  let inEvent = false
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i]
+    // Handle folded lines by appending subsequent indented lines
+    while (i + 1 < lines.length && (lines[i + 1].startsWith(' ') || lines[i + 1].startsWith('\t'))) {
+      i++
+      line += lines[i].substring(1)
+    }
+    line = line.trim()
+
+    if (line === 'BEGIN:VEVENT') {
+      inEvent = true
+      currentEvent = {}
+    } else if (line === 'END:VEVENT') {
+      if (currentEvent.title && currentEvent.startDate) {
+        events.push({
+          id: currentEvent.id || Math.random().toString(36).slice(2),
+          title: currentEvent.title,
+          description: currentEvent.description || '',
+          startDate: currentEvent.startDate!,
+          endDate: currentEvent.endDate || currentEvent.startDate!,
+          location: currentEvent.location,
+          url: currentEvent.url,
+        })
+      }
+      inEvent = false
+    } else if (inEvent) {
+      if (line.startsWith('UID:')) {
+        currentEvent.id = line.substring(4)
+      } else if (line.startsWith('SUMMARY:')) {
+        currentEvent.title = line.substring(8)
+      } else if (line.startsWith('DESCRIPTION:')) {
+        currentEvent.description = line.substring(12).replace(/\\n/g, ' ').replace(/\\,/g, ',')
+      } else if (line.startsWith('DTSTART')) {
+        const dateStr = line.split(':')[1]
+        currentEvent.startDate = parseICalDate(dateStr)
+      } else if (line.startsWith('DTEND')) {
+        const dateStr = line.split(':')[1]
+        currentEvent.endDate = parseICalDate(dateStr)
+      } else if (line.startsWith('LOCATION:')) {
+        currentEvent.location = line.substring(9)
+      } else if (line.startsWith('URL:')) {
+        currentEvent.url = line.substring(4)
+      }
+    }
+  }
+
+  return events
+}
+
+function extractCourseFromTitle(title: string): string {
+  const patterns = [/^([A-Z]{2,4}\s?\d{3})/i, /\[([A-Z]{2,4}\s?\d{3})\]/i, /([A-Z]{2,4}-\d{3})/i]
+  for (const p of patterns) {
+    const m = title.match(p)
+    if (m) return m[1]
+  }
+  const words = title.split(' ')
+  if (words.length >= 2) return `${words[0]} ${words[1]}`
+  return 'Unknown Course'
+}
+
+function estimatePoints(title: string): number {
+  const t = title.toLowerCase()
+  if (t.includes('exam') || t.includes('final')) return 200
+  if (t.includes('midterm')) return 150
+  if (t.includes('project')) return 100
+  if (t.includes('assignment') || t.includes('homework')) return 75
+  if (t.includes('quiz')) return 50
+  if (t.includes('discussion')) return 25
+  return 100
+}
+
+function determineSubmissionType(title: string): string[] {
+  const t = title.toLowerCase()
+  if (t.includes('discussion')) return ['discussion_topic']
+  if (t.includes('exam') && t.includes('online')) return ['online_quiz']
+  if (t.includes('exam')) return ['on_paper']
+  return ['online_upload']
+}
+
+function convertToCanvasAssignments(events: ParsedCalendarEvent[]): CanvasAssignment[] {
+  return events
+    .filter((event) => {
+      const title = event.title.toLowerCase()
+      return (
+        title.includes('assignment') ||
+        title.includes('quiz') ||
+        title.includes('exam') ||
+        title.includes('due') ||
+        title.includes('test') ||
+        title.includes('homework')
+      )
+    })
+    .map((event, index) => {
+      const courseMatch = event.title.match(/^([A-Z]{2,4}\s?\d{3})/i)
+      const courseName = courseMatch ? courseMatch[1] : extractCourseFromTitle(event.title)
+      const points = estimatePoints(event.title)
+      return {
+        id: event.id,
+        name: event.title,
+        description: event.description,
+        dueAt: event.startDate,
+        pointsPossible: points,
+        submissionTypes: determineSubmissionType(event.title),
+        courseId: (index + 1).toString(),
+        courseName: courseName,
+        htmlUrl: event.url || `https://canvas.asu.edu/courses/${index + 1}/assignments/${event.id}`,
+        workflowState: 'published',
+      }
+    })
+}
+
+function useCanvasIcal(icalUrl: string) {
+  const [assignments, setAssignments] = useState<CanvasAssignment[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchAssignments = async () => {
+    if (!icalUrl) return
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(icalUrl, { method: 'GET', headers: { Accept: 'text/calendar' } })
+      if (!response.ok) throw new Error(`Failed to fetch calendar: ${response.status}`)
+      const icalData = await response.text()
+      const events = parseICalendar(icalData)
+      const canvasAssignments = convertToCanvasAssignments(events)
+      setAssignments(canvasAssignments)
+    } catch (err) {
+      console.error('Error fetching Canvas iCal:', err)
+      setError(err instanceof Error ? err.message : 'Failed to fetch calendar data')
+      setAssignments(mockAssignments)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return { assignments, loading, error, fetchAssignments }
+}
+
 export function CanvasIntegration() {
+  const CANVAS_ICAL_URL = "https://canvas.asu.edu/feeds/calendars/user_JZO93mWSTZtOoikVSXUNwrqoDqtHkoThPvoEcJTX.ics"
+
+  const { assignments: icalAssignments, loading, error, fetchAssignments } = useCanvasIcal(CANVAS_ICAL_URL)
+
   const [assignments, setAssignments] = useState<CanvasAssignment[]>(mockAssignments)
   const [courses, setCourses] = useState<CanvasCourse[]>(mockCourses)
   const [isConnected, setIsConnected] = useState(true)
@@ -148,10 +335,31 @@ export function CanvasIntegration() {
   const [selectedCourses, setSelectedCourses] = useState<string[]>(["1", "2", "3"])
   const [showSettings, setShowSettings] = useState(false)
 
+  useEffect(() => {
+    // Load iCal data on mount
+    fetchAssignments()
+  }, [])
+
+  useEffect(() => {
+    if (icalAssignments.length > 0) {
+      setAssignments(icalAssignments)
+      const uniqueCourses = Array.from(new Set(icalAssignments.map((a) => a.courseName))).map((courseName, index) => ({
+        id: (index + 1).toString(),
+        name: courseName,
+        courseCode: courseName,
+        term: 'Fall 2024',
+        enrollmentType: 'student' as const,
+        totalStudents: 30 + Math.floor(Math.random() * 40),
+        startAt: new Date(2024, 8, 1),
+        endAt: new Date(2024, 11, 15),
+      }))
+      setCourses(uniqueCourses)
+    }
+  }, [icalAssignments])
+
   const syncAssignments = async () => {
     setIsSyncing(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    await fetchAssignments()
     setLastSync(new Date())
     setIsSyncing(false)
   }

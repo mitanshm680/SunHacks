@@ -2,10 +2,12 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { useCalendar } from '@/lib/calendar-context'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, ChevronRight, Plus, Clock, BookOpen, Brain } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { CanvasFeedManager } from './canvas-feed-manager'
 
 interface CalendarEvent {
   id: string
@@ -56,6 +58,7 @@ export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState<"week" | "month">("week")
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
+  const { events, setEvents } = useCalendar()
 
   const getWeekDays = (date: Date) => {
     const week = []
@@ -94,7 +97,7 @@ export function CalendarView() {
   }
 
   const getEventsForDay = (date: Date) => {
-    return mockEvents.filter((event) => {
+    return events.filter((event) => {
       const eventDate = new Date(event.start)
       return eventDate.toDateString() === date.toDateString()
     })
@@ -191,6 +194,7 @@ export function CalendarView() {
                 <Plus className="h-4 w-4 mr-1" />
                 Add
               </Button>
+              <CanvasFeedManager />
             </div>
           </div>
         </CardHeader>

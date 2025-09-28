@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -223,6 +221,43 @@ export function TaskList() {
   }
 
   const stats = getTaskStats()
+
+  // Load imported tasks from localStorage on mount and merge
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('importedTasks')
+      if (!raw) return
+      const parsed = JSON.parse(raw) as any[]
+      if (!Array.isArray(parsed) || parsed.length === 0) return
+      const imported: Task[] = parsed.map((p) => ({
+        id: p.id || Date.now().toString(),
+        title: p.title || 'Imported Task',
+        description: p.description || undefined,
+        dueDate: p.dueDate ? new Date(p.dueDate) : new Date(),
+        priority: (p.priority as Task['priority']) || 'medium',
+        status: (p.status as Task['status']) || 'todo',
+        type: (p.type as Task['type']) || 'assignment',
+        course: p.course || undefined,
+        estimatedHours: p.estimatedHours ? Number(p.estimatedHours) : undefined,
+        completedHours: p.completedHours || 0,
+        tags: Array.isArray(p.tags) ? p.tags : [],
+        isStarred: !!p.isStarred,
+        createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
+        source: 'manual',
+      }))
+
+      // Merge ensuring no duplicate IDs
+      setTasks((prev) => {
+        const existingIds = new Set(prev.map((t) => t.id))
+        const toAdd = imported.filter((t) => !existingIds.has(t.id))
+        return [...prev, ...toAdd]
+      })
+      // Optionally clear the importedTasks key so it's not re-applied repeatedly
+      // localStorage.removeItem('importedTasks')
+    } catch (e) {
+      console.error('Failed to load imported tasks', e)
+    }
+  }, [])
 
   return (
     <div className="space-y-6">

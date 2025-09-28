@@ -5,11 +5,19 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, Brain, BookOpen, Clock } from "lucide-react"
 import { AuthModal } from "@/components/auth-modal"
+import TwoStepOnboarding, { TwoStepOnboardingModal } from '@/components/two-step-onboarding'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { DashboardView } from "@/components/dashboard-view"
 
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   if (isAuthenticated) {
     return <DashboardView />
@@ -50,7 +58,7 @@ export default function HomePage() {
           </p>
           <Button
             size="lg"
-            onClick={() => setShowAuthModal(true)}
+            onClick={() => setShowOnboarding(true)}
             className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3"
           >
             Start Planning
@@ -126,6 +134,21 @@ export default function HomePage() {
           </div>
         </div>
       </main>
+
+      <Dialog open={showOnboarding} onOpenChange={setShowOnboarding}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Get Started — Connect calendars</DialogTitle>
+          </DialogHeader>
+          <TwoStepOnboardingModal
+            onComplete={() => {
+              setIsAuthenticated(true)
+              setShowOnboarding(false)
+            }}
+            onClose={() => setShowOnboarding(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       <AuthModal
         isOpen={showAuthModal}
