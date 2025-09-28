@@ -18,8 +18,9 @@ type Props = {
 }
 
 export default function GoogleCalendarConnect({ onConnected }: Props) {
-  const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-  const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY
+  // Use embedded credentials for user convenience
+  const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '551738567665-aqchud9f51f841lf6ld1gp16rp16u454.apps.googleusercontent.com'
+  const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || 'AIzaSyAvaVDwFrhwwi39Yan4itoXnJxq_iufu-s'
 
   const [gapiInited, setGapiInited] = useState(false)
   const [gisInited, setGisInited] = useState(false)
