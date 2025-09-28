@@ -161,18 +161,18 @@ export function CanvasIntegration() {
     const dueDate = assignment.dueAt
 
     if (assignment.submittedAt && assignment.gradedAt) {
-      return { status: "graded", color: "bg-green-100 text-green-800 border-green-200" }
+      return { status: "graded", color: "bg-app-blue/20 text-app-black border-app-blue/30" }
     }
     if (assignment.submittedAt) {
-      return { status: "submitted", color: "bg-blue-100 text-blue-800 border-blue-200" }
+      return { status: "submitted", color: "bg-app-yellow/20 text-app-black border-app-yellow/30" }
     }
     if (dueDate < now) {
-      return { status: "overdue", color: "bg-red-100 text-red-800 border-red-200" }
+      return { status: "overdue", color: "bg-app-peach/20 text-app-black border-app-peach/30" }
     }
     if (dueDate.getTime() - now.getTime() < 24 * 60 * 60 * 1000) {
-      return { status: "due soon", color: "bg-yellow-100 text-yellow-800 border-yellow-200" }
+      return { status: "due soon", color: "bg-app-yellow/20 text-app-black border-app-yellow/30" }
     }
-    return { status: "pending", color: "bg-gray-100 text-gray-800 border-gray-200" }
+    return { status: "pending", color: "bg-app-cream/20 text-app-black border-app-cream/30" }
   }
 
   const getDaysUntilDue = (dueDate: Date) => {
@@ -215,7 +215,7 @@ export function CanvasIntegration() {
             <div className="flex items-center gap-2">
               {isConnected && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <CheckCircle2 className="h-4 w-4 text-app-blue" />
                   <span>Last sync: {lastSync.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</span>
                 </div>
               )}
@@ -251,8 +251,8 @@ export function CanvasIntegration() {
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                <BookOpen className="h-5 w-5 text-blue-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-app-blue/20">
+                <BookOpen className="h-5 w-5 text-app-blue" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{upcomingAssignments.length}</p>
@@ -265,8 +265,8 @@ export function CanvasIntegration() {
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-app-yellow/20">
+                <CheckCircle2 className="h-5 w-5 text-app-yellow" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{submittedAssignments.length}</p>
@@ -279,8 +279,8 @@ export function CanvasIntegration() {
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100">
-                <AlertCircle className="h-5 w-5 text-red-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-app-peach/20">
+                <AlertCircle className="h-5 w-5 text-app-peach" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{overdueAssignments.length}</p>
@@ -331,7 +331,7 @@ export function CanvasIntegration() {
             <TabsContent value="upcoming" className="space-y-4">
               {upcomingAssignments.length === 0 ? (
                 <div className="text-center py-8">
-                  <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                  <CheckCircle2 className="h-12 w-12 text-app-blue mx-auto mb-4" />
                   <h3 className="text-lg font-medium mb-2">All caught up!</h3>
                   <p className="text-muted-foreground">No upcoming assignments at the moment</p>
                 </div>
@@ -371,7 +371,7 @@ export function CanvasIntegration() {
                               </div>
                               <span
                                 className={cn(
-                                  daysUntilDue <= 1 ? "text-red-600" : daysUntilDue <= 3 ? "text-yellow-600" : "",
+                                  daysUntilDue <= 1 ? "text-app-peach" : daysUntilDue <= 3 ? "text-app-yellow" : "",
                                 )}
                               >
                                 {daysUntilDue === 0
@@ -425,7 +425,7 @@ export function CanvasIntegration() {
                           <p className="text-sm text-muted-foreground mb-2">{assignment.courseName}</p>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
-                              <CheckCircle2 className="h-3 w-3 text-green-600" />
+                              <CheckCircle2 className="h-3 w-3 text-app-blue" />
                               <span>
                                 Submitted{" "}
                                 {assignment.submittedAt?.toLocaleDateString("en-US", {

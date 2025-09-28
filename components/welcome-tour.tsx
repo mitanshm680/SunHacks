@@ -78,12 +78,12 @@ export function WelcomeTour({ onComplete }: WelcomeTourProps) {
     {
       title: "You're All Set!",
       description: "Start planning smarter with your AI study companion",
-      icon: <CheckCircle2 className="h-8 w-8 text-green-500" />,
+      icon: <CheckCircle2 className="h-8 w-8 text-app-blue" />,
       content: (
         <div className="space-y-4">
           <div className="text-center">
-            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mb-4">
-              <CheckCircle2 className="h-10 w-10 text-white" />
+            <div className="mx-auto w-20 h-20 bg-app-blue rounded-2xl flex items-center justify-center mb-4">
+              <CheckCircle2 className="h-10 w-10 text-app-black" />
             </div>
             <p className="text-muted-foreground mb-4">
               You're ready to experience smarter studying with AI-powered scheduling!

@@ -159,30 +159,30 @@ export function AIScheduler() {
   const getSessionTypeColor = (type: StudySession["type"]) => {
     switch (type) {
       case "focused":
-        return "bg-blue-100 text-blue-800 border-blue-200"
+        return "bg-app-blue/20 text-app-black border-app-blue/30"
       case "review":
-        return "bg-green-100 text-green-800 border-green-200"
+        return "bg-app-yellow/20 text-app-black border-app-yellow/30"
       case "practice":
-        return "bg-purple-100 text-purple-800 border-purple-200"
+        return "bg-app-peach/20 text-app-black border-app-peach/30"
     }
   }
 
   const getStatusColor = (status: StudySession["status"]) => {
     switch (status) {
       case "suggested":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+        return "bg-app-yellow/20 text-app-black border-app-yellow/30"
       case "approved":
-        return "bg-blue-100 text-blue-800 border-blue-200"
+        return "bg-app-blue/20 text-app-black border-app-blue/30"
       case "scheduled":
-        return "bg-green-100 text-green-800 border-green-200"
+        return "bg-app-peach/20 text-app-black border-app-peach/30"
     }
   }
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 90) return "text-green-600"
-    if (confidence >= 75) return "text-blue-600"
-    if (confidence >= 60) return "text-yellow-600"
-    return "text-red-600"
+    if (confidence >= 90) return "text-app-blue"
+    if (confidence >= 75) return "text-app-yellow"
+    if (confidence >= 60) return "text-app-peach"
+    return "text-app-black"
   }
 
   const totalStudyHours = studySessions.reduce((acc, session) => acc + session.duration / 60, 0)
@@ -382,8 +382,8 @@ export function AIScheduler() {
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20">
-                <Clock className="h-5 w-5 text-primary" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-app-blue/20">
+                <Clock className="h-5 w-5 text-app-blue" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{totalStudyHours.toFixed(1)}h</p>
@@ -396,8 +396,8 @@ export function AIScheduler() {
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-yellow-100">
-                <Brain className="h-5 w-5 text-yellow-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-app-yellow/20">
+                <Brain className="h-5 w-5 text-app-yellow" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{studySessions.length}</p>
@@ -410,8 +410,8 @@ export function AIScheduler() {
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                <CheckCircle2 className="h-5 w-5 text-blue-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-app-blue/20">
+                <CheckCircle2 className="h-5 w-5 text-app-blue" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{approvedSessions.length}</p>
@@ -424,8 +424,8 @@ export function AIScheduler() {
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-                <Calendar className="h-5 w-5 text-green-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-app-peach/20">
+                <Calendar className="h-5 w-5 text-app-peach" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{scheduledSessions.length}</p>
@@ -531,7 +531,7 @@ export function AIScheduler() {
                             <Button
                               size="sm"
                               onClick={() => scheduleSession(session.id)}
-                              className="bg-green-600 hover:bg-green-700"
+                              className="bg-app-peach hover:bg-app-peach/90 text-app-black"
                             >
                               <Calendar className="h-3 w-3 mr-1" />
                               Schedule
@@ -542,7 +542,7 @@ export function AIScheduler() {
                           </>
                         )}
                         {session.status === "scheduled" && (
-                          <Badge className="bg-green-100 text-green-800 border-green-200">
+                          <Badge className="bg-app-peach/20 text-app-black border-app-peach/30">
                             <CheckCircle2 className="h-3 w-3 mr-1" />
                             Scheduled
                           </Badge>
@@ -597,15 +597,15 @@ export function AIScheduler() {
               <h4 className="font-medium text-sm">Study Recommendations</h4>
               <div className="space-y-2 text-sm text-muted-foreground">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="h-4 w-4 text-app-yellow mt-0.5 flex-shrink-0" />
                   <span>Consider shorter sessions (60-90 min) for better focus</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 text-app-blue mt-0.5 flex-shrink-0" />
                   <span>Your morning availability is excellent for challenging tasks</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="h-4 w-4 text-app-peach mt-0.5 flex-shrink-0" />
                   <span>Schedule review sessions closer to exam dates</span>
                 </div>
               </div>

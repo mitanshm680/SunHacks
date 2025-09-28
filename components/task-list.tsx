@@ -129,11 +129,11 @@ export function TaskList() {
   const getPriorityColor = (priority: Task["priority"]) => {
     switch (priority) {
       case "high":
-        return "bg-red-100 text-red-800 border-red-200"
+        return "bg-app-peach/20 text-app-black border-app-peach/30"
       case "medium":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+        return "bg-app-yellow/20 text-app-black border-app-yellow/30"
       case "low":
-        return "bg-green-100 text-green-800 border-green-200"
+        return "bg-app-blue/20 text-app-black border-app-blue/30"
     }
   }
 
@@ -151,9 +151,9 @@ export function TaskList() {
   const getStatusIcon = (status: Task["status"]) => {
     switch (status) {
       case "completed":
-        return <CheckCircle2 className="h-4 w-4 text-green-600" />
+        return <CheckCircle2 className="h-4 w-4 text-app-blue" />
       case "in-progress":
-        return <Circle className="h-4 w-4 text-blue-600 fill-blue-600/20" />
+        return <Circle className="h-4 w-4 text-app-yellow fill-app-yellow/20" />
       case "todo":
         return <Circle className="h-4 w-4 text-muted-foreground" />
     }
@@ -167,9 +167,9 @@ export function TaskList() {
   }
 
   const getUrgencyColor = (daysUntilDue: number) => {
-    if (daysUntilDue < 0) return "text-red-600"
-    if (daysUntilDue <= 1) return "text-red-500"
-    if (daysUntilDue <= 3) return "text-yellow-600"
+    if (daysUntilDue < 0) return "text-app-peach"
+    if (daysUntilDue <= 1) return "text-app-peach"
+    if (daysUntilDue <= 3) return "text-app-yellow"
     return "text-muted-foreground"
   }
 
@@ -245,8 +245,8 @@ export function TaskList() {
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-app-blue/20">
+                <CheckCircle2 className="h-5 w-5 text-app-blue" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.completed}</p>
@@ -259,8 +259,8 @@ export function TaskList() {
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                <Circle className="h-5 w-5 text-blue-600 fill-blue-600/20" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-app-yellow/20">
+                <Circle className="h-5 w-5 text-app-yellow fill-app-yellow/20" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.inProgress}</p>
@@ -273,8 +273,8 @@ export function TaskList() {
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100">
-                <AlertCircle className="h-5 w-5 text-red-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-app-peach/20">
+                <AlertCircle className="h-5 w-5 text-app-peach" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.overdue}</p>
@@ -388,7 +388,7 @@ export function TaskList() {
                           >
                             {task.title}
                           </h3>
-                          {task.isStarred && <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />}
+                          {task.isStarred && <Star className="h-4 w-4 text-app-yellow fill-app-yellow" />}
                         </div>
                         {task.course && <p className="text-sm text-muted-foreground mb-1">{task.course}</p>}
                         {task.description && (
@@ -457,7 +457,7 @@ export function TaskList() {
                       <Star
                         className={cn(
                           "h-4 w-4",
-                          task.isStarred ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground",
+                          task.isStarred ? "text-app-yellow fill-app-yellow" : "text-muted-foreground",
                         )}
                       />
                     </Button>
@@ -738,7 +738,7 @@ function TaskDetailModal({
               <p
                 className={cn(
                   "text-xs",
-                  daysUntilDue < 0 ? "text-red-600" : daysUntilDue <= 1 ? "text-yellow-600" : "text-muted-foreground",
+                  daysUntilDue < 0 ? "text-app-peach" : daysUntilDue <= 1 ? "text-app-peach" : "text-app-yellow",
                 )}
               >
                 {daysUntilDue < 0
@@ -753,10 +753,10 @@ function TaskDetailModal({
               <Badge
                 className={cn(
                   task.status === "completed"
-                    ? "bg-green-100 text-green-800"
+                    ? "bg-app-blue/20 text-app-black"
                     : task.status === "in-progress"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-gray-100 text-gray-800",
+                      ? "bg-app-yellow/20 text-app-black"
+                      : "bg-app-cream/20 text-app-black",
                 )}
               >
                 {task.status.replace("-", " ")}

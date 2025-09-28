@@ -91,8 +91,8 @@ export function DashboardView() {
           <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-shadow">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-green-400/20 to-green-500/10">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-app-yellow/20">
+                  <CheckCircle2 className="h-5 w-5 text-app-black" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Completed</p>

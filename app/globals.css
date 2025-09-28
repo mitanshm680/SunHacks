@@ -4,80 +4,81 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated to new color palette: white, periwinkle, dutch-white, azure-web, van-dyke */
-  --background: #ffffff;
-  --foreground: #40342c;
-  --card: #ffffff;
-  --card-foreground: #40342c;
-  --popover: #ffffff;
-  --popover-foreground: #40342c;
-  --primary: #ded4fb;
-  --primary-foreground: #40342c;
-  --secondary: #f9e9c8;
-  --secondary-foreground: #40342c;
-  --muted: #deecec;
-  --muted-foreground: #40342c;
-  --accent: #f9e9c8;
-  --accent-foreground: #40342c;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #deecec;
-  --input: #deecec;
-  --ring: #ded4fb;
-  --chart-1: #ded4fb;
-  --chart-2: #f9e9c8;
-  --chart-3: #deecec;
-  --chart-4: #ffffff;
-  --chart-5: #40342c;
+  /* Updated to use only the 5 specified colors: 000000, B7E3FB, F9F6F1, EFE0A4, F8A172 */
+  --background: #f9f6f1;
+  --foreground: #000000;
+  --card: #f9f6f1;
+  --card-foreground: #000000;
+  --popover: #f9f6f1;
+  --popover-foreground: #000000;
+  --primary: #b7e3fb;
+  --primary-foreground: #000000;
+  --secondary: #efe0a4;
+  --secondary-foreground: #000000;
+  --muted: #b7e3fb;
+  --muted-foreground: #000000;
+  --accent: #f8a172;
+  --accent-foreground: #000000;
+  --destructive: #f8a172;
+  --destructive-foreground: #000000;
+  --border: #b7e3fb;
+  --input: #f9f6f1;
+  --ring: #b7e3fb;
+  --chart-1: #b7e3fb;
+  --chart-2: #efe0a4;
+  --chart-3: #f8a172;
+  --chart-4: #f9f6f1;
+  --chart-5: #000000;
   --radius: 0.5rem;
-  --sidebar: #deecec;
-  --sidebar-foreground: #40342c;
-  --sidebar-primary: #ded4fb;
-  --sidebar-primary-foreground: #40342c;
-  --sidebar-accent: #f9e9c8;
-  --sidebar-accent-foreground: #40342c;
-  --sidebar-border: #deecec;
-  --sidebar-ring: #ded4fb;
+  --sidebar: #f9f6f1;
+  --sidebar-foreground: #000000;
+  --sidebar-primary: #b7e3fb;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #efe0a4;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: #b7e3fb;
+  --sidebar-ring: #b7e3fb;
 
-  /* Updated gradient variables for new color palette */
-  --gradient-primary: linear-gradient(135deg, #ffffff 0%, #ded4fb 50%, #f9e9c8 100%);
-  --gradient-secondary: linear-gradient(135deg, #deecec 0%, #f9e9c8 50%, #ded4fb 100%);
-  --gradient-accent: linear-gradient(135deg, #f9e9c8 0%, #deecec 50%, #ffffff 100%);
+  /* Updated gradient variables using only the 5 specified colors */
+  --gradient-primary: linear-gradient(135deg, #f9f6f1 0%, #b7e3fb 50%, #efe0a4 100%);
+  --gradient-secondary: linear-gradient(135deg, #b7e3fb 0%, #efe0a4 50%, #f8a172 100%);
+  --gradient-accent: linear-gradient(135deg, #efe0a4 0%, #f8a172 50%, #f9f6f1 100%);
 }
 
 .dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --card: #1e293b;
-  --card-foreground: #f8fafc;
-  --popover: #1e293b;
-  --popover-foreground: #f8fafc;
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  --secondary: #334155;
-  --secondary-foreground: #f8fafc;
-  --muted: #334155;
-  --muted-foreground: #94a3b8;
-  --accent: #475569;
-  --accent-foreground: #f8fafc;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #334155;
-  --input: #334155;
-  --ring: #3b82f6;
-  --chart-1: #3b82f6;
-  --chart-2: #06b6d4;
-  --chart-3: #10b981;
-  --chart-4: #f59e0b;
-  --chart-5: #ef4444;
-  --sidebar: #1e293b;
-  --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #3b82f6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #475569;
-  --sidebar-accent-foreground: #f8fafc;
-  --sidebar-border: #334155;
-  --sidebar-ring: #3b82f6;
+  /* Dark mode also uses only the 5 specified colors with black as primary background */
+  --background: #000000;
+  --foreground: #f9f6f1;
+  --card: #000000;
+  --card-foreground: #f9f6f1;
+  --popover: #000000;
+  --popover-foreground: #f9f6f1;
+  --primary: #b7e3fb;
+  --primary-foreground: #000000;
+  --secondary: #efe0a4;
+  --secondary-foreground: #000000;
+  --muted: #b7e3fb;
+  --muted-foreground: #000000;
+  --accent: #f8a172;
+  --accent-foreground: #000000;
+  --destructive: #f8a172;
+  --destructive-foreground: #000000;
+  --border: #b7e3fb;
+  --input: #000000;
+  --ring: #b7e3fb;
+  --chart-1: #b7e3fb;
+  --chart-2: #efe0a4;
+  --chart-3: #f8a172;
+  --chart-4: #f9f6f1;
+  --chart-5: #000000;
+  --sidebar: #000000;
+  --sidebar-foreground: #f9f6f1;
+  --sidebar-primary: #b7e3fb;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #efe0a4;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: #b7e3fb;
+  --sidebar-ring: #b7e3fb;
 }
 
 @theme inline {
@@ -144,16 +145,65 @@
     background: var(--gradient-accent);
   }
 
-  /* Added clean background utility */
+  /* Fixed gradient syntax by using CSS variables instead of arbitrary values */
   .clean-bg {
-    @apply bg-gradient-to-br from-white via-muted/30 to-secondary/20;
+    background: linear-gradient(135deg, #f9f6f1 0%, rgba(183, 227, 251, 0.3) 50%, rgba(239, 224, 164, 0.2) 100%);
   }
 
   .glass-effect {
-    @apply bg-white/90 backdrop-blur-sm border border-border/30;
+    @apply bg-[#F9F6F1]/90 backdrop-blur-sm border border-[#B7E3FB]/30;
   }
 
   .glass-effect-dark {
-    @apply bg-slate-900/80 backdrop-blur-md border border-slate-700/20;
+    @apply bg-[#000000]/80 backdrop-blur-md border border-[#B7E3FB]/20;
+  }
+
+  /* Added specific color utilities for the 5-color palette */
+  .bg-app-black {
+    background-color: #000000;
+  }
+  .bg-app-blue {
+    background-color: #b7e3fb;
+  }
+  .bg-app-cream {
+    background-color: #f9f6f1;
+  }
+  .bg-app-yellow {
+    background-color: #efe0a4;
+  }
+  .bg-app-peach {
+    background-color: #f8a172;
+  }
+
+  .text-app-black {
+    color: #000000;
+  }
+  .text-app-blue {
+    color: #b7e3fb;
+  }
+  .text-app-cream {
+    color: #f9f6f1;
+  }
+  .text-app-yellow {
+    color: #efe0a4;
+  }
+  .text-app-peach {
+    color: #f8a172;
+  }
+
+  .border-app-black {
+    border-color: #000000;
+  }
+  .border-app-blue {
+    border-color: #b7e3fb;
+  }
+  .border-app-cream {
+    border-color: #f9f6f1;
+  }
+  .border-app-yellow {
+    border-color: #efe0a4;
+  }
+  .border-app-peach {
+    border-color: #f8a172;
   }
 }

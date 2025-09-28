@@ -103,15 +103,15 @@ export function CalendarView() {
   const getEventTypeColor = (type: CalendarEvent["type"]) => {
     switch (type) {
       case "assignment":
-        return "bg-red-100 text-red-800 border-red-200"
+        return "bg-app-peach/20 text-app-black border-app-peach/30"
       case "study":
-        return "bg-blue-100 text-blue-800 border-blue-200"
+        return "bg-app-blue/20 text-app-black border-app-blue/30"
       case "ai-suggested":
         return "bg-primary/20 text-primary-foreground border-primary/30"
       case "personal":
-        return "bg-green-100 text-green-800 border-green-200"
+        return "bg-app-yellow/20 text-app-black border-app-yellow/30"
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+        return "bg-app-cream/20 text-app-black border-app-cream/30"
     }
   }
 
