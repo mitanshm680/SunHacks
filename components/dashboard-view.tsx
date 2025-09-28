@@ -8,7 +8,6 @@ import { Calendar, Brain, BookOpen, Clock, Plus, Settings, Bell, CheckCircle2 } 
 import { CalendarView } from "@/components/calendar-view"
 import { TaskList } from "@/components/task-list"
 import { AIScheduler } from "@/components/ai-scheduler"
-import { CanvasIntegration } from "@/components/canvas-integration"
 import { WelcomeTour } from "@/components/welcome-tour"
 
 export function DashboardView() {
@@ -43,11 +42,11 @@ export function DashboardView() {
 
       <div className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-shadow">
+          <Card className="border-border/60 bg-primary/50 backdrop-blur-sm hover:shadow-lg transition-shadow">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10">
-                  <Calendar className="h-5 w-5 text-primary" />
+                  <Calendar className="h-5 w-5 text-secondary-foreground" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">This Week</p>
@@ -58,7 +57,7 @@ export function DashboardView() {
             </CardContent>
           </Card>
 
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-shadow">
+          <Card className="border-border/60 bg-secondary/50 backdrop-blur-sm hover:shadow-lg transition-shadow">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-secondary/20 to-secondary/10">
@@ -73,7 +72,7 @@ export function DashboardView() {
             </CardContent>
           </Card>
 
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-shadow">
+          <Card className="border-border/60 bg-accent/50 backdrop-blur-sm hover:shadow-lg transition-shadow">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-accent/20 to-accent/10">
@@ -88,11 +87,11 @@ export function DashboardView() {
             </CardContent>
           </Card>
 
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-shadow">
+          <Card className="border-border/60 bg-app-yellow/50 backdrop-blur-sm hover:shadow-lg transition-shadow">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-green-400/20 to-green-500/10">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-app-yellow/20">
+                  <CheckCircle2 className="h-5 w-5 text-app-black" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Completed</p>
@@ -128,13 +127,6 @@ export function DashboardView() {
                 <Brain className="h-4 w-4" />
                 AI Scheduler
               </TabsTrigger>
-              <TabsTrigger
-                value="canvas"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-              >
-                <BookOpen className="h-4 w-4" />
-                Canvas
-              </TabsTrigger>
             </TabsList>
 
             <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg">
@@ -153,10 +145,6 @@ export function DashboardView() {
 
           <TabsContent value="ai-scheduler" className="space-y-6">
             <AIScheduler />
-          </TabsContent>
-
-          <TabsContent value="canvas" className="space-y-6">
-            <CanvasIntegration />
           </TabsContent>
         </Tabs>
       </div>
