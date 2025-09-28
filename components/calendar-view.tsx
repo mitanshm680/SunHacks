@@ -2,85 +2,60 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ChevronLeft, ChevronRight, Calendar, Clock, Brain, Target, Filter, Grid3X3, List } from "lucide-react"
-
-interface StudySession {
-  id: number
-  title: string
-  assignmentId?: number
-  taskId?: number
-  date: string
-  time: string
-  duration: number
-  type: "study" | "task" | "break"
-  priority: "low" | "medium" | "high"
-  confidence: number
-}
+import { ChevronLeft, ChevronRight, Plus, Clock, BookOpen, Brain } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface CalendarEvent {
   id: string
   title: string
-  start: string
-  end: string
-  type: "busy" | "class" | "assignment" | "personal"
-  color?: string
+  start: Date
+  end: Date
+  type: "assignment" | "study" | "personal" | "ai-suggested"
+  course?: string
+  description?: string
 }
 
-interface CalendarViewProps {
-  sessions: StudySession[]
-  onSessionUpdate?: (session: StudySession) => void
-}
+const mockEvents: CalendarEvent[] = [
+  {
+    id: "1",
+    title: "Math 101 - Calculus Assignment",
+    start: new Date(2024, 11, 15, 14, 0),
+    end: new Date(2024, 11, 15, 15, 30),
+    type: "assignment",
+    course: "MATH 101",
+    description: "Complete problems 1-20 from Chapter 5",
+  },
+  {
+    id: "2",
+    title: "Study Session: Physics",
+    start: new Date(2024, 11, 16, 10, 0),
+    end: new Date(2024, 11, 16, 12, 0),
+    type: "study",
+    course: "PHYS 201",
+  },
+  {
+    id: "3",
+    title: "AI Suggested: Review Chemistry Notes",
+    start: new Date(2024, 11, 17, 15, 0),
+    end: new Date(2024, 11, 17, 16, 30),
+    type: "ai-suggested",
+    course: "CHEM 101",
+  },
+  {
+    id: "4",
+    title: "Gym Workout",
+    start: new Date(2024, 11, 18, 18, 0),
+    end: new Date(2024, 11, 18, 19, 30),
+    type: "personal",
+  },
+]
 
-export function CalendarView({ sessions, onSessionUpdate }: CalendarViewProps) {
+export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [viewMode, setViewMode] = useState<"week" | "month">("week")
-  const [showFilter, setShowFilter] = useState(false)
-  const [filters, setFilters] = useState({
-    study: true,
-    task: true,
-    high: true,
-    medium: true,
-    low: true,
-  })
-
-  // Mock existing calendar events (from Google Calendar)
-  const existingEvents: CalendarEvent[] = [
-    {
-      id: "1",
-      title: "Math Class",
-      start: "2024-01-15T10:00:00",
-      end: "2024-01-15T11:30:00",
-      type: "class",
-      color: "bg-blue-500",
-    },
-    {
-      id: "2",
-      title: "Physics Lab",
-      start: "2024-01-16T14:00:00",
-      end: "2024-01-16T17:00:00",
-      type: "class",
-      color: "bg-green-500",
-    },
-    {
-      id: "3",
-      title: "Lunch with friends",
-      start: "2024-01-17T12:00:00",
-      end: "2024-01-17T13:30:00",
-      type: "personal",
-      color: "bg-purple-500",
-    },
-    {
-      id: "4",
-      title: "History Essay Due",
-      start: "2024-01-18T23:59:00",
-      end: "2024-01-18T23:59:00",
-      type: "assignment",
-      color: "bg-red-500",
-    },
-  ]
+  const [view, setView] = useState<"week" | "month">("week")
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
 
   const getWeekDays = (date: Date) => {
     const week = []
@@ -105,298 +80,202 @@ export function CalendarView({ sessions, onSessionUpdate }: CalendarViewProps) {
     const startDate = new Date(firstDay)
     const endDate = new Date(lastDay)
 
-    // Adjust to show full weeks
+    // Adjust to start from Sunday
     startDate.setDate(startDate.getDate() - startDate.getDay())
     endDate.setDate(endDate.getDate() + (6 - endDate.getDay()))
 
     const days = []
-    const currentDate = new Date(startDate)
-    while (currentDate <= endDate) {
-      days.push(new Date(currentDate))
-      currentDate.setDate(currentDate.getDate() + 1)
+    const current = new Date(startDate)
+    while (current <= endDate) {
+      days.push(new Date(current))
+      current.setDate(current.getDate() + 1)
     }
     return days
   }
 
-  const getSessionsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split("T")[0]
-    return sessions.filter((session) => {
-      if (session.date !== dateStr) return false
-      if (!filters[session.type]) return false
-      if (!filters[session.priority]) return false
-      return true
+  const getEventsForDay = (date: Date) => {
+    return mockEvents.filter((event) => {
+      const eventDate = new Date(event.start)
+      return eventDate.toDateString() === date.toDateString()
     })
   }
 
-  const getEventsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split("T")[0]
-    return existingEvents.filter((event) => {
-      const eventDate = new Date(event.start).toISOString().split("T")[0]
-      return eventDate === dateStr
-    })
-  }
-
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(":")
-    const hour = Number.parseInt(hours)
-    const ampm = hour >= 12 ? "PM" : "AM"
-    const displayHour = hour % 12 || 12
-    return `${displayHour}:${minutes} ${ampm}`
-  }
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-500/10 text-red-500 border-red-500/20"
-      case "medium":
-        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
-      case "low":
-        return "bg-green-500/10 text-green-500 border-green-500/20"
+  const getEventTypeColor = (type: CalendarEvent["type"]) => {
+    switch (type) {
+      case "assignment":
+        return "bg-red-100 text-red-800 border-red-200"
+      case "study":
+        return "bg-blue-100 text-blue-800 border-blue-200"
+      case "ai-suggested":
+        return "bg-primary/20 text-primary-foreground border-primary/30"
+      case "personal":
+        return "bg-green-100 text-green-800 border-green-200"
       default:
-        return "bg-gray-500/10 text-gray-500 border-gray-500/20"
+        return "bg-gray-100 text-gray-800 border-gray-200"
     }
   }
 
-  const getTypeIcon = (type: string) => {
+  const getEventIcon = (type: CalendarEvent["type"]) => {
     switch (type) {
+      case "assignment":
+        return <BookOpen className="h-3 w-3" />
       case "study":
-        return <Brain className="w-3 h-3" />
-      case "task":
-        return <Target className="w-3 h-3" />
+        return <Clock className="h-3 w-3" />
+      case "ai-suggested":
+        return <Brain className="h-3 w-3" />
       default:
-        return <Clock className="w-3 h-3" />
+        return <Clock className="h-3 w-3" />
     }
   }
 
   const navigateDate = (direction: "prev" | "next") => {
     const newDate = new Date(currentDate)
-    if (viewMode === "week") {
-      newDate.setDate(newDate.getDate() + (direction === "next" ? 7 : -7))
+    if (view === "week") {
+      newDate.setDate(currentDate.getDate() + (direction === "next" ? 7 : -7))
     } else {
-      newDate.setMonth(newDate.getMonth() + (direction === "next" ? 1 : -1))
+      newDate.setMonth(currentDate.getMonth() + (direction === "next" ? 1 : -1))
     }
     setCurrentDate(newDate)
   }
 
-  const isToday = (date: Date) => {
-    const today = new Date()
-    return date.toDateString() === today.toDateString()
+  const formatDateRange = () => {
+    if (view === "week") {
+      const weekDays = getWeekDays(currentDate)
+      const start = weekDays[0]
+      const end = weekDays[6]
+      return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+    } else {
+      return currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    }
   }
 
-  const isCurrentMonth = (date: Date) => {
-    return date.getMonth() === currentDate.getMonth()
-  }
-
-  const weekDays = getWeekDays(currentDate)
-  const monthDays = getMonthDays(currentDate)
+  const weekDays = view === "week" ? getWeekDays(currentDate) : []
+  const monthDays = view === "month" ? getMonthDays(currentDate) : []
 
   return (
-    <div className="space-y-6">
-      {/* Calendar Header */}
-      <Card>
-        <CardHeader>
+    <div className="space-y-4">
+      <Card className="glass-effect">
+        <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Smart Calendar
-              </CardTitle>
-              <CardDescription>
-                Your integrated schedule with AI-generated study sessions and existing commitments
-              </CardDescription>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" onClick={() => navigateDate("prev")}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigateDate("next")}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <CardTitle className="text-lg">{formatDateRange()}</CardTitle>
             </div>
             <div className="flex items-center gap-2">
-              <Tabs value={viewMode} onValueChange={(value: "week" | "month") => setViewMode(value)}>
-                <TabsList>
-                  <TabsTrigger value="week" className="flex items-center gap-1">
-                    <List className="w-4 h-4" />
-                    Week
-                  </TabsTrigger>
-                  <TabsTrigger value="month" className="flex items-center gap-1">
-                    <Grid3X3 className="w-4 h-4" />
-                    Month
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <Button variant="outline" size="sm" onClick={() => setShowFilter(!showFilter)}>
-                <Filter className="w-4 h-4" />
+              <div className="flex rounded-md border border-border/50 bg-muted/30">
+                <Button
+                  variant={view === "week" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setView("week")}
+                  className={cn(view === "week" && "bg-primary text-primary-foreground")}
+                >
+                  Week
+                </Button>
+                <Button
+                  variant={view === "month" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setView("month")}
+                  className={cn(view === "month" && "bg-primary text-primary-foreground")}
+                >
+                  Month
+                </Button>
+              </div>
+              <Button size="sm" className="bg-primary hover:bg-primary/90">
+                <Plus className="h-4 w-4 mr-1" />
+                Add
               </Button>
             </div>
           </div>
-
-          {/* Navigation */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => navigateDate("prev")}>
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => navigateDate("next")}>
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-              <h3 className="text-lg font-semibold">
-                {viewMode === "week"
-                  ? `${weekDays[0].toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })} - ${weekDays[6].toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}`
-                  : currentDate.toLocaleDateString("en-US", {
-                      month: "long",
-                      year: "numeric",
-                    })}
-              </h3>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
-              Today
-            </Button>
-          </div>
-
-          {/* Filters */}
-          {showFilter && (
-            <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
-              <span className="text-sm font-medium">Show:</span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={filters.study ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilters({ ...filters, study: !filters.study })}
-                >
-                  <Brain className="w-3 h-3 mr-1" />
-                  Study
-                </Button>
-                <Button
-                  variant={filters.task ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilters({ ...filters, task: !filters.task })}
-                >
-                  <Target className="w-3 h-3 mr-1" />
-                  Tasks
-                </Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={filters.high ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilters({ ...filters, high: !filters.high })}
-                  className="text-red-500 border-red-500/20"
-                >
-                  High
-                </Button>
-                <Button
-                  variant={filters.medium ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilters({ ...filters, medium: !filters.medium })}
-                  className="text-yellow-500 border-yellow-500/20"
-                >
-                  Medium
-                </Button>
-                <Button
-                  variant={filters.low ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilters({ ...filters, low: !filters.low })}
-                  className="text-green-500 border-green-500/20"
-                >
-                  Low
-                </Button>
-              </div>
-            </div>
-          )}
         </CardHeader>
       </Card>
 
-      {/* Calendar Grid */}
-      <Card>
+      <Card className="glass-effect">
         <CardContent className="p-0">
-          {viewMode === "week" ? (
-            <div className="grid grid-cols-8 min-h-[600px]">
+          {view === "week" ? (
+            <div className="grid grid-cols-8 min-h-[500px]">
               {/* Time column */}
-              <div className="border-r border-border">
-                <div className="h-12 border-b border-border flex items-center justify-center text-sm font-medium">
-                  Time
-                </div>
-                {Array.from({ length: 14 }, (_, i) => i + 8).map((hour) => (
-                  <div key={hour} className="h-12 border-b border-border flex items-center justify-center text-xs">
-                    {hour % 12 || 12}:00 {hour >= 12 ? "PM" : "AM"}
+              <div className="border-r border-border/30 p-2">
+                <div className="h-10 border-b border-border/20"></div>
+                {Array.from({ length: 12 }, (_, i) => (
+                  <div key={i} className="h-10 border-b border-border/20 text-xs text-muted-foreground p-1">
+                    {i + 8}:00
                   </div>
                 ))}
               </div>
 
               {/* Day columns */}
               {weekDays.map((day, dayIndex) => (
-                <div key={dayIndex} className="border-r border-border last:border-r-0">
-                  <div
-                    className={`h-12 border-b border-border flex flex-col items-center justify-center text-sm ${
-                      isToday(day) ? "bg-primary/10 text-primary font-semibold" : ""
-                    }`}
-                  >
-                    <span className="text-xs">
-                      {day.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()}
-                    </span>
-                    <span className={isToday(day) ? "text-primary" : ""}>{day.getDate()}</span>
+                <div key={dayIndex} className="border-r border-border/30 last:border-r-0">
+                  {/* Day header */}
+                  <div className="h-10 border-b border-border/30 p-2 bg-muted/20">
+                    <div className="text-center">
+                      <div className="text-xs text-muted-foreground">
+                        {day.toLocaleDateString("en-US", { weekday: "short" })}
+                      </div>
+                      <div
+                        className={cn(
+                          "text-sm font-medium",
+                          day.toDateString() === new Date().toDateString() &&
+                            "bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center mx-auto text-xs",
+                        )}
+                      >
+                        {day.getDate()}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Time slots */}
                   <div className="relative">
-                    {Array.from({ length: 14 }, (_, i) => i + 8).map((hour) => (
-                      <div key={hour} className="h-12 border-b border-border" />
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <div key={i} className="h-10 border-b border-border/20"></div>
                     ))}
 
-                    {/* Events and sessions */}
-                    <div className="absolute inset-0 p-1">
-                      {/* Existing events */}
-                      {getEventsForDate(day).map((event) => {
-                        const startTime = new Date(event.start)
-                        const endTime = new Date(event.end)
-                        const startHour = startTime.getHours()
-                        const duration = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60)
-                        const top = (startHour - 8) * 48 + (startTime.getMinutes() / 60) * 48
-                        const height = duration * 48
+                    {/* Events */}
+                    {getEventsForDay(day).map((event, eventIndex) => {
+                      const startHour = event.start.getHours()
+                      const startMinute = event.start.getMinutes()
+                      const endHour = event.end.getHours()
+                      const endMinute = event.end.getMinutes()
+                      const top = (startHour - 8) * 40 + (startMinute * 40) / 60
+                      const height = (endHour - startHour) * 40 + ((endMinute - startMinute) * 40) / 60
 
-                        return (
-                          <div
-                            key={event.id}
-                            className={`absolute left-1 right-1 ${event.color} text-white text-xs p-1 rounded opacity-80`}
-                            style={{ top: `${top}px`, height: `${height}px` }}
-                          >
-                            <div className="font-medium truncate">{event.title}</div>
-                            <div className="opacity-75">{formatTime(startTime.toTimeString().slice(0, 5))}</div>
-                          </div>
-                        )
-                      })}
-
-                      {/* AI-generated sessions */}
-                      {getSessionsForDate(day).map((session) => {
-                        const [hours, minutes] = session.time.split(":").map(Number)
-                        const duration = session.duration / 60
-                        const top = (hours - 8) * 48 + (minutes / 60) * 48
-                        const height = duration * 48
-
-                        return (
-                          <div
-                            key={session.id}
-                            className="absolute left-1 right-1 bg-primary/20 border border-primary/30 text-primary text-xs p-1 rounded cursor-pointer hover:bg-primary/30 transition-colors"
-                            style={{ top: `${top}px`, height: `${height}px` }}
-                            onClick={() => onSessionUpdate?.(session)}
-                          >
-                            <div className="flex items-center gap-1">
-                              {getTypeIcon(session.type)}
-                              <span className="font-medium truncate">{session.title}</span>
-                            </div>
-                            <div className="opacity-75">{formatTime(session.time)}</div>
-                            <div className="flex items-center gap-1 mt-1">
-                              <Badge className={`${getPriorityColor(session.priority)} text-xs px-1 py-0`}>
-                                {session.priority}
-                              </Badge>
+                      return (
+                        <div
+                          key={event.id}
+                          className={cn(
+                            "absolute left-1 right-1 rounded border p-1 cursor-pointer hover:shadow-sm transition-shadow",
+                            getEventTypeColor(event.type),
+                          )}
+                          style={{
+                            top: `${top}px`,
+                            height: `${height}px`,
+                            zIndex: 10 + eventIndex,
+                          }}
+                          onClick={() => setSelectedEvent(event)}
+                        >
+                          <div className="flex items-start gap-1">
+                            {getEventIcon(event.type)}
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs font-medium truncate">{event.title}</div>
+                              <div className="text-xs opacity-75">
+                                {event.start.toLocaleTimeString("en-US", {
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                })}
+                              </div>
                             </div>
                           </div>
-                        )
-                      })}
-                    </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               ))}
@@ -405,104 +284,134 @@ export function CalendarView({ sessions, onSessionUpdate }: CalendarViewProps) {
             <div className="grid grid-cols-7">
               {/* Month view header */}
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div key={day} className="h-12 border-b border-border flex items-center justify-center font-medium">
+                <div
+                  key={day}
+                  className="p-3 text-center text-sm font-medium text-muted-foreground border-b border-border/50"
+                >
                   {day}
                 </div>
               ))}
 
               {/* Month view days */}
-              {monthDays.map((day, dayIndex) => (
-                <div
-                  key={dayIndex}
-                  className={`min-h-[120px] border-b border-r border-border last:border-r-0 p-2 ${
-                    !isCurrentMonth(day) ? "bg-muted/30 text-muted-foreground" : ""
-                  } ${isToday(day) ? "bg-primary/5" : ""}`}
-                >
-                  <div className={`text-sm font-medium mb-2 ${isToday(day) ? "text-primary" : ""}`}>
-                    {day.getDate()}
-                  </div>
+              {monthDays.map((day, dayIndex) => {
+                const isCurrentMonth = day.getMonth() === currentDate.getMonth()
+                const isToday = day.toDateString() === new Date().toDateString()
+                const dayEvents = getEventsForDay(day)
 
-                  {/* Events for this day */}
-                  <div className="space-y-1">
-                    {getEventsForDate(day)
-                      .slice(0, 2)
-                      .map((event) => (
-                        <div key={event.id} className={`text-xs p-1 rounded ${event.color} text-white truncate`}>
-                          {event.title}
-                        </div>
-                      ))}
-
-                    {getSessionsForDate(day)
-                      .slice(0, 3)
-                      .map((session) => (
-                        <div
-                          key={session.id}
-                          className="text-xs p-1 rounded bg-primary/20 text-primary border border-primary/30 truncate cursor-pointer hover:bg-primary/30 transition-colors"
-                          onClick={() => onSessionUpdate?.(session)}
+                return (
+                  <div
+                    key={dayIndex}
+                    className={cn(
+                      "min-h-[120px] p-2 border-b border-r border-border/50 last:border-r-0",
+                      !isCurrentMonth && "bg-muted/20 text-muted-foreground",
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "text-sm font-medium mb-1",
+                        isToday &&
+                          "bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center",
+                      )}
+                    >
+                      {day.getDate()}
+                    </div>
+                    <div className="space-y-1">
+                      {dayEvents.slice(0, 3).map((event) => (
+                        <Badge
+                          key={event.id}
+                          variant="secondary"
+                          className={cn(
+                            "text-xs px-1 py-0 h-5 cursor-pointer hover:opacity-80 block truncate",
+                            getEventTypeColor(event.type),
+                          )}
+                          onClick={() => setSelectedEvent(event)}
                         >
                           <div className="flex items-center gap-1">
-                            {getTypeIcon(session.type)}
-                            <span>{session.title}</span>
+                            {getEventIcon(event.type)}
+                            <span className="truncate">{event.title}</span>
                           </div>
-                        </div>
+                        </Badge>
                       ))}
-
-                    {/* Show more indicator */}
-                    {getEventsForDate(day).length + getSessionsForDate(day).length > 5 && (
-                      <div className="text-xs text-muted-foreground">
-                        +{getEventsForDate(day).length + getSessionsForDate(day).length - 5} more
-                      </div>
-                    )}
+                      {dayEvents.length > 3 && (
+                        <div className="text-xs text-muted-foreground">+{dayEvents.length - 3} more</div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Legend */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Legend</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-500 rounded" />
-              <span>Classes</span>
+      {/* Event Details Modal */}
+      {selectedEvent && (
+        <Card className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-96 z-50 border-border/50 bg-card/95 backdrop-blur-sm shadow-xl">
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-3">
+                <div className={cn("p-2 rounded-lg", getEventTypeColor(selectedEvent.type))}>
+                  {getEventIcon(selectedEvent.type)}
+                </div>
+                <div>
+                  <CardTitle className="text-lg">{selectedEvent.title}</CardTitle>
+                  {selectedEvent.course && <p className="text-sm text-muted-foreground">{selectedEvent.course}</p>}
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedEvent(null)}>
+                ×
+              </Button>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-500 rounded" />
-              <span>Labs</span>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span>
+                {selectedEvent.start.toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-purple-500 rounded" />
-              <span>Personal</span>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="w-4"></span>
+              <span>
+                {selectedEvent.start.toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })}{" "}
+                -{" "}
+                {selectedEvent.end.toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })}
+              </span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-500 rounded" />
-              <span>Deadlines</span>
+            {selectedEvent.description && (
+              <div>
+                <h4 className="text-sm font-medium mb-2">Description</h4>
+                <p className="text-sm text-muted-foreground">{selectedEvent.description}</p>
+              </div>
+            )}
+            <div className="flex gap-2 pt-4">
+              <Button size="sm" className="flex-1">
+                Edit
+              </Button>
+              <Button size="sm" variant="outline" className="flex-1 bg-transparent">
+                Delete
+              </Button>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-primary/20 border border-primary/30 rounded" />
-              <span>AI Study Sessions</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Brain className="w-4 h-4 text-primary" />
-              <span>Study</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Target className="w-4 h-4 text-accent" />
-              <span>Personal Tasks</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-primary/10 rounded" />
-              <span>Today</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Backdrop for modal */}
+      {selectedEvent && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" onClick={() => setSelectedEvent(null)} />
+      )}
     </div>
   )
 }

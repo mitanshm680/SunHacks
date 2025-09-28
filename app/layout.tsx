@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "StudySync - Smart AI Schedule Planner",
-  description: "AI-powered schedule planner that automatically organizes your academic and personal life",
+  description: "AI-powered schedule planner for students with Google Calendar integration",
   generator: "v0.app",
 }
 
@@ -29,10 +29,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body className={`font-sans ${inter.variable} ${jetbrainsMono.variable} antialiased`}>
-        <Suspense fallback={null}>{children}</Suspense>
-        <Analytics />
+        <Suspense fallback={null}>
+          {children}
+          <Analytics />
+        </Suspense>
       </body>
     </html>
   )
