@@ -48,7 +48,14 @@ export default function HomePage() {
       </header>
 
       <main className="container mx-auto px-4 py-12">
-        <div className="text-center mb-12">
+        <div className="text-center mb-16">
+          <div className="mb-6">
+            <img 
+              src="/mascot.png" 
+              alt="Plz_Use_It Mascot" 
+              className="w-32 h-32 mx-auto mb-4"
+            />
+          </div>
           <h2 className="text-3xl md:text-5xl font-bold text-balance mb-4">
             Smart Study
             <span className="text-primary"> Scheduling</span>
