@@ -46,7 +46,7 @@ export default function HomePage() {
             <span className="text-primary"> Scheduling</span>
           </h2>
           <p className="text-lg text-muted-foreground text-balance max-w-xl mx-auto mb-6">
-            AI finds perfect study times in your calendar and imports Canvas assignments automatically.
+            AI finds perfect study times in your calendar and helps you plan your assignments automatically.
           </p>
           <Button
             size="lg"
@@ -71,10 +71,10 @@ export default function HomePage() {
           <Card className="glass-effect">
             <CardHeader className="text-center pb-2">
               <BookOpen className="h-8 w-8 text-primary mx-auto mb-2" />
-              <CardTitle className="text-base">Canvas Import</CardTitle>
+              <CardTitle className="text-base">Task Management</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription className="text-center text-sm">Auto-imports assignments</CardDescription>
+              <CardDescription className="text-center text-sm">Organize your assignments</CardDescription>
             </CardContent>
           </Card>
 
@@ -107,7 +107,7 @@ export default function HomePage() {
                 <span className="text-lg font-bold text-primary">1</span>
               </div>
               <h4 className="text-lg font-semibold mb-1">Connect</h4>
-              <p className="text-muted-foreground text-sm">Link Google Calendar and Canvas</p>
+              <p className="text-muted-foreground text-sm">Link Google Calendar</p>
             </div>
             <div className="flex flex-col items-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20 mb-3">

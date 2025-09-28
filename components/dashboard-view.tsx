@@ -8,7 +8,6 @@ import { Calendar, Brain, BookOpen, Clock, Plus, Settings, Bell, CheckCircle2 } 
 import { CalendarView } from "@/components/calendar-view"
 import { TaskList } from "@/components/task-list"
 import { AIScheduler } from "@/components/ai-scheduler"
-import { CanvasIntegration } from "@/components/canvas-integration"
 import { WelcomeTour } from "@/components/welcome-tour"
 
 export function DashboardView() {
@@ -128,13 +127,6 @@ export function DashboardView() {
                 <Brain className="h-4 w-4" />
                 AI Scheduler
               </TabsTrigger>
-              <TabsTrigger
-                value="canvas"
-                className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-              >
-                <BookOpen className="h-4 w-4" />
-                Canvas
-              </TabsTrigger>
             </TabsList>
 
             <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg">
@@ -153,10 +145,6 @@ export function DashboardView() {
 
           <TabsContent value="ai-scheduler" className="space-y-6">
             <AIScheduler />
-          </TabsContent>
-
-          <TabsContent value="canvas" className="space-y-6">
-            <CanvasIntegration />
           </TabsContent>
         </Tabs>
       </div>

@@ -49,7 +49,7 @@ interface Task {
   tags: string[]
   isStarred: boolean
   createdAt: Date
-  source?: "canvas" | "manual"
+  source?: "manual"
 }
 
 const mockTasks: Task[] = [
@@ -67,7 +67,7 @@ const mockTasks: Task[] = [
     tags: ["math", "calculus", "integration"],
     isStarred: true,
     createdAt: new Date(2024, 11, 10),
-    source: "canvas",
+    source: "manual",
   },
   {
     id: "2",
@@ -83,7 +83,7 @@ const mockTasks: Task[] = [
     tags: ["physics", "lab", "report"],
     isStarred: false,
     createdAt: new Date(2024, 11, 8),
-    source: "canvas",
+    source: "manual",
   },
   {
     id: "3",
@@ -290,38 +290,26 @@ export function TaskList() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Tasks & Assignments</CardTitle>
-            <Dialog open={isAddTaskOpen} onOpenChange={setIsAddTaskOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/90">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Task
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Add New Task</DialogTitle>
-                  <DialogDescription>Create a new task or assignment to track</DialogDescription>
-                </DialogHeader>
-                <AddTaskForm
-                  onClose={() => setIsAddTaskOpen(false)}
-                  onAdd={(task) => setTasks((prev) => [...prev, task])}
-                />
-              </DialogContent>
-            </Dialog>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search tasks..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-4 flex-wrap">
+              <Dialog open={isAddTaskOpen} onOpenChange={setIsAddTaskOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-primary hover:bg-primary/90">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Task
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Add New Task</DialogTitle>
+                    <DialogDescription>Create a new task or assignment to track</DialogDescription>
+                  </DialogHeader>
+                  <AddTaskForm
+                    onClose={() => setIsAddTaskOpen(false)}
+                    onAdd={(task) => setTasks((prev) => [...prev, task])}
+                  />
+                </DialogContent>
+              </Dialog>
+
               <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
                 <SelectTrigger className="w-32">
                   <SelectValue />
@@ -333,6 +321,7 @@ export function TaskList() {
                   <SelectItem value="completed">Completed</SelectItem>
                 </SelectContent>
               </Select>
+
               <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                 <SelectTrigger className="w-32">
                   <SelectValue />
@@ -343,6 +332,18 @@ export function TaskList() {
                   <SelectItem value="created">Created</SelectItem>
                 </SelectContent>
               </Select>
+
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search tasks..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -401,11 +402,6 @@ export function TaskList() {
                               {tag}
                             </Badge>
                           ))}
-                          {task.source === "canvas" && (
-                            <Badge variant="outline" className="text-xs">
-                              Canvas
-                            </Badge>
-                          )}
                         </div>
                       </div>
 

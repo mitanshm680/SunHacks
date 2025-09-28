@@ -4,27 +4,33 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated to use only the 5 specified colors: 000000, B7E3FB, F9F6F1, EFE0A4, F8A172 */
+  /* Updated to use only the 5 specified colors: 000000, 04344D, F9F6F1, EFE0A4, F8A172 */
   --background: #f9f6f1;
   --foreground: #000000;
   --card: #f9f6f1;
   --card-foreground: #000000;
   --popover: #f9f6f1;
   --popover-foreground: #000000;
-  --primary: #b7e3fb;
-  --primary-foreground: #000000;
+  /* Changed primary color from light blue to dark navy */
+  --primary: #04344d;
+  --primary-foreground: #f9f6f1;
   --secondary: #efe0a4;
   --secondary-foreground: #000000;
-  --muted: #b7e3fb;
+  /* Changed muted color from light blue to dark navy */
+  --muted: #04344d;
+  /* Changed muted-foreground from cream to black for better readability on light backgrounds */
   --muted-foreground: #000000;
   --accent: #f8a172;
-  --accent-foreground: #000000;
+  --accent-foreground: #f9f6f1; /* Updated accent-foreground from black to white for better contrast on peach background */
   --destructive: #f8a172;
-  --destructive-foreground: #000000;
-  --border: #b7e3fb;
+  --destructive-foreground: #f9f6f1; /* Updated destructive-foreground from black to white for better contrast on peach background */
+  /* Changed border color from light blue to dark navy */
+  --border: #04344d;
   --input: #f9f6f1;
-  --ring: #b7e3fb;
-  --chart-1: #b7e3fb;
+  /* Changed ring color from light blue to dark navy */
+  --ring: #04344d;
+  /* Changed chart-1 color from light blue to dark navy */
+  --chart-1: #04344d;
   --chart-2: #efe0a4;
   --chart-3: #f8a172;
   --chart-4: #f9f6f1;
@@ -32,17 +38,15 @@
   --radius: 0.5rem;
   --sidebar: #f9f6f1;
   --sidebar-foreground: #000000;
-  --sidebar-primary: #b7e3fb;
-  --sidebar-primary-foreground: #000000;
+  /* Changed sidebar-primary color from light blue to dark navy */
+  --sidebar-primary: #04344d;
+  --sidebar-primary-foreground: #f9f6f1;
   --sidebar-accent: #efe0a4;
   --sidebar-accent-foreground: #000000;
-  --sidebar-border: #b7e3fb;
-  --sidebar-ring: #b7e3fb;
-
-  /* Updated gradient variables using only the 5 specified colors */
-  --gradient-primary: linear-gradient(135deg, #f9f6f1 0%, #b7e3fb 50%, #efe0a4 100%);
-  --gradient-secondary: linear-gradient(135deg, #b7e3fb 0%, #efe0a4 50%, #f8a172 100%);
-  --gradient-accent: linear-gradient(135deg, #efe0a4 0%, #f8a172 50%, #f9f6f1 100%);
+  /* Changed sidebar-border color from light blue to dark navy */
+  --sidebar-border: #04344d;
+  /* Changed sidebar-ring color from light blue to dark navy */
+  --sidebar-ring: #04344d;
 }
 
 .dark {
@@ -53,32 +57,40 @@
   --card-foreground: #f9f6f1;
   --popover: #000000;
   --popover-foreground: #f9f6f1;
-  --primary: #b7e3fb;
-  --primary-foreground: #000000;
+  /* Changed dark mode primary color from light blue to dark navy */
+  --primary: #04344d;
+  --primary-foreground: #f9f6f1;
   --secondary: #efe0a4;
   --secondary-foreground: #000000;
-  --muted: #b7e3fb;
-  --muted-foreground: #000000;
+  /* Changed dark mode muted color from light blue to dark navy */
+  --muted: #04344d;
+  --muted-foreground: #f9f6f1;
   --accent: #f8a172;
-  --accent-foreground: #000000;
+  --accent-foreground: #f9f6f1; /* Updated dark mode accent-foreground from black to white for better contrast */
   --destructive: #f8a172;
-  --destructive-foreground: #000000;
-  --border: #b7e3fb;
+  --destructive-foreground: #f9f6f1; /* Updated dark mode destructive-foreground from black to white for better contrast */
+  /* Changed dark mode border color from light blue to dark navy */
+  --border: #04344d;
   --input: #000000;
-  --ring: #b7e3fb;
-  --chart-1: #b7e3fb;
+  /* Changed dark mode ring color from light blue to dark navy */
+  --ring: #04344d;
+  /* Changed dark mode chart-1 color from light blue to dark navy */
+  --chart-1: #04344d;
   --chart-2: #efe0a4;
   --chart-3: #f8a172;
   --chart-4: #f9f6f1;
   --chart-5: #000000;
   --sidebar: #000000;
   --sidebar-foreground: #f9f6f1;
-  --sidebar-primary: #b7e3fb;
-  --sidebar-primary-foreground: #000000;
+  /* Changed dark mode sidebar-primary color from light blue to dark navy */
+  --sidebar-primary: #04344d;
+  --sidebar-primary-foreground: #f9f6f1;
   --sidebar-accent: #efe0a4;
   --sidebar-accent-foreground: #000000;
-  --sidebar-border: #b7e3fb;
-  --sidebar-ring: #b7e3fb;
+  /* Changed dark mode sidebar-border color from light blue to dark navy */
+  --sidebar-border: #04344d;
+  /* Changed dark mode sidebar-ring color from light blue to dark navy */
+  --sidebar-ring: #04344d;
 }
 
 @theme inline {
@@ -131,7 +143,7 @@
   }
 }
 
-/* Added custom utility classes for the beautiful light blue gradients */
+/* Added custom utility classes for the beautiful dark navy gradients */
 @layer utilities {
   .gradient-primary {
     background: var(--gradient-primary);
@@ -145,25 +157,27 @@
     background: var(--gradient-accent);
   }
 
-  /* Fixed gradient syntax by using CSS variables instead of arbitrary values */
+  /* Updated gradient to use dark navy instead of light blue */
   .clean-bg {
-    background: linear-gradient(135deg, #f9f6f1 0%, rgba(183, 227, 251, 0.3) 50%, rgba(239, 224, 164, 0.2) 100%);
+    background: linear-gradient(135deg, #f9f6f1 0%, rgba(4, 52, 77, 0.3) 50%, rgba(239, 224, 164, 0.2) 100%);
   }
 
   .glass-effect {
-    @apply bg-[#F9F6F1]/90 backdrop-blur-sm border border-[#B7E3FB]/30;
+    /* Updated glass effect to use dark navy border instead of light blue */
+    @apply bg-[#F9F6F1]/90 backdrop-blur-sm border border-[#04344D]/30;
   }
 
   .glass-effect-dark {
-    @apply bg-[#000000]/80 backdrop-blur-md border border-[#B7E3FB]/20;
+    /* Updated dark glass effect to use dark navy border instead of light blue */
+    @apply bg-[#000000]/80 backdrop-blur-md border border-[#04344D]/20;
   }
 
-  /* Added specific color utilities for the 5-color palette */
+  /* Updated color utilities to use dark navy instead of light blue */
   .bg-app-black {
     background-color: #000000;
   }
   .bg-app-blue {
-    background-color: #b7e3fb;
+    background-color: #04344d;
   }
   .bg-app-cream {
     background-color: #f9f6f1;
@@ -179,7 +193,7 @@
     color: #000000;
   }
   .text-app-blue {
-    color: #b7e3fb;
+    color: #04344d;
   }
   .text-app-cream {
     color: #f9f6f1;
@@ -195,7 +209,7 @@
     border-color: #000000;
   }
   .border-app-blue {
-    border-color: #b7e3fb;
+    border-color: #04344d;
   }
   .border-app-cream {
     border-color: #f9f6f1;

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Brain, BookOpen, CheckCircle2, ArrowRight, Sparkles } from "lucide-react"
+import { Calendar, Brain, CheckCircle2, ArrowRight, Sparkles } from "lucide-react"
 
 interface WelcomeTourProps {
   onComplete: () => void
@@ -33,20 +33,15 @@ export function WelcomeTour({ onComplete }: WelcomeTourProps) {
     },
     {
       title: "Smart Calendar Integration",
-      description: "Connect your Google Calendar and Canvas for seamless scheduling",
+      description: "Connect your Google Calendar for seamless scheduling",
       icon: <Calendar className="h-8 w-8 text-primary" />,
       content: (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
               <Calendar className="h-6 w-6 text-primary mb-2" />
               <h4 className="font-medium">Google Calendar</h4>
-              <p className="text-sm text-muted-foreground">Sync your existing events</p>
-            </div>
-            <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/20">
-              <BookOpen className="h-6 w-6 text-secondary-foreground mb-2" />
-              <h4 className="font-medium">Canvas LMS</h4>
-              <p className="text-sm text-muted-foreground">Import assignments automatically</p>
+              <p className="text-sm text-muted-foreground">Sync your existing events and find free time</p>
             </div>
           </div>
         </div>
