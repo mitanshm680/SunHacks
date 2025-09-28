@@ -9,6 +9,15 @@ import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   Brain,
   Calendar,
@@ -18,41 +27,21 @@ import {
   CheckCircle2,
   AlertCircle,
   Settings,
+  Target,
+  Scale,
   RotateCcw,
   TrendingUp,
+  Plus,
+  Star,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useTasks, Task } from "@/lib/task-context"
+import { useCalendar } from "@/lib/calendar-context"
+import { IntelligentScheduler, SchedulingPreferences, StudySession } from "@/lib/intelligent-scheduler"
 
-interface StudySession {
-  id: string
-  taskId: string
-  taskTitle: string
-  course: string
-  startTime: Date
-  endTime: Date
-  duration: number // in minutes
-  priority: "high" | "medium" | "low"
-  type: "focused" | "review" | "practice"
-  confidence: number // AI confidence score 0-100
-  reasoning: string
-  status: "suggested" | "approved" | "scheduled"
-}
+// StudySession interface is now imported from intelligent-scheduler
 
-interface SchedulingPreferences {
-  preferredStudyHours: {
-    start: number // 0-23
-    end: number // 0-23
-  }
-  sessionDuration: {
-    min: number
-    max: number
-    preferred: number
-  }
-  breakDuration: number
-  studyDaysPerWeek: number
-  avoidWeekends: boolean
-  bufferTime: number // minutes before/after existing events
-}
+// SchedulingPreferences interface is now imported from intelligent-scheduler
 
 const mockStudySessions: StudySession[] = [
   {
@@ -99,45 +88,163 @@ const mockStudySessions: StudySession[] = [
   },
 ]
 
+// Helper function for session status colors
+const getSessionStatusColor = (status: string) => {
+  switch (status) {
+    case 'suggested':
+      return 'bg-blue-100 text-blue-800 border-blue-200'
+    case 'approved':
+      return 'bg-green-100 text-green-800 border-green-200'
+    case 'rejected':
+      return 'bg-red-100 text-red-800 border-red-200'
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200'
+  }
+}
+
 export function AIScheduler() {
-  const [studySessions, setStudySessions] = useState<StudySession[]>(mockStudySessions)
+  const { tasks, toggleTaskSelection, getSelectedTasks, getTasksForScheduling } = useTasks()
+  const { events, setEvents } = useCalendar()
+  const [studySessions, setStudySessions] = useState<StudySession[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
+  
+  // Debug logging
+  console.log('AIScheduler - Events:', events)
+  console.log('AIScheduler - setEvents function:', typeof setEvents)
+  const [showTaskSelection, setShowTaskSelection] = useState(false)
+  const [showCalendarView, setShowCalendarView] = useState(false)
+
+  // Debug logging for main component
+  console.log('AIScheduler - Total tasks:', tasks.length)
+  console.log('AIScheduler - Selected tasks:', getSelectedTasks().length)
   const [preferences, setPreferences] = useState<SchedulingPreferences>({
     preferredStudyHours: { start: 9, end: 18 },
-    sessionDuration: { min: 30, max: 180, preferred: 90 },
+    sessionDuration: { min: 30, max: 240, preferred: 90 }, // Increased max to 4 hours
     breakDuration: 15,
     studyDaysPerWeek: 5,
     avoidWeekends: false,
     bufferTime: 15,
+    algorithm: 'balanced', // Default to balanced AI approach
   })
   const [showSettings, setShowSettings] = useState(false)
 
   const generateSchedule = async () => {
-    setIsGenerating(true)
-    // Simulate AI processing
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    try {
+      console.log('Generate schedule button clicked!')
+      setIsGenerating(true)
+      
+      const selectedTasks = getTasksForScheduling()
+      console.log('Selected tasks for scheduling:', selectedTasks)
+      
+      if (selectedTasks.length === 0) {
+        alert("Please select at least one task to schedule!")
+        setIsGenerating(false)
+        return
+      }
 
-    // In a real app, this would call an AI service
-    const newSessions = [
-      ...studySessions,
-      {
-        id: Date.now().toString(),
-        taskId: "4",
-        taskTitle: "History Essay Draft",
-        course: "HIST 201",
-        startTime: new Date(2024, 11, 19, 13, 0),
-        endTime: new Date(2024, 11, 19, 15, 0),
-        duration: 120,
-        priority: "high",
-        type: "focused",
-        confidence: 89,
-        reasoning: "Afternoon slot ideal for creative writing. Sufficient time before deadline.",
-        status: "suggested",
-      },
-    ]
+      // Simulate AI processing
+      await new Promise((resolve) => setTimeout(resolve, 2000))
 
-    setStudySessions(newSessions)
-    setIsGenerating(false)
+      // Use the new IntelligentScheduler
+      console.log('Creating scheduler with preferences:', preferences)
+      console.log('Existing events:', events)
+      console.log('All tasks:', tasks)
+      
+      const scheduler = new IntelligentScheduler(preferences, events, tasks)
+      console.log('Scheduler created successfully')
+      
+      const result = scheduler.generateSchedule(selectedTasks)
+      console.log('Scheduler result:', result)
+      console.log('Generated sessions:', result.sessions)
+      console.log('Result errors:', result.errors)
+      console.log('Result conflicts:', result.conflicts)
+      console.log('Generated sessions count:', result.sessions.length)
+      console.log('Selected tasks count:', selectedTasks.length)
+      
+      if (result.sessions.length === 0) {
+        console.error('No sessions generated. Errors:', result.errors)
+        console.error('Conflicts:', result.conflicts)
+        console.error('Optimization:', result.optimization)
+        console.error('Selected tasks:', selectedTasks.map(t => ({ id: t.id, title: t.title, dueDate: t.dueDate })))
+        console.error('Preferences:', preferences)
+        console.error('Existing events count:', events.length)
+        
+        // Create fallback sessions for ALL selected tasks
+        const fallbackSessions: StudySession[] = selectedTasks.map((task, index) => {
+          const startTime = new Date(Date.now() + (24 + index * 2) * 60 * 60 * 1000) // Spread across multiple days
+          const endTime = new Date(startTime.getTime() + 90 * 60 * 1000) // 90 minutes duration
+          
+          return {
+            id: `fallback_${Date.now()}_${index}`,
+            taskId: task.id,
+            title: task.title,
+            taskTitle: task.title,
+            startTime,
+            endTime,
+            duration: 90,
+            type: "focused",
+            confidence: 50,
+            reasoning: "Fallback scheduling - scheduler failed to find optimal slots",
+            priority: task.priority,
+            aiOptimized: false,
+            qualityScore: 50,
+            urgencyScore: 50,
+            course: task.course || "General",
+            status: "suggested"
+          }
+        })
+        
+        console.log('Creating fallback sessions for all tasks:', fallbackSessions.length)
+        setStudySessions(fallbackSessions)
+        setShowCalendarView(true)
+        setIsGenerating(false)
+        return
+      }
+
+      // Log AI insights
+      console.log(`Schedule generated with ${result.optimization}% optimization`)
+      console.log('AI Insights:', result.conflicts)
+      
+      // Convert to the expected format
+      const newSessions: StudySession[] = result.sessions.map(session => ({
+        ...session,
+        taskTitle: session.title,
+        course: selectedTasks.find(t => t.id === session.taskId)?.course || "General",
+        status: "suggested" as const,
+      }))
+
+      setStudySessions(newSessions)
+      
+      // Add sessions to calendar events
+      const calendarEvents = newSessions.map(session => ({
+        id: session.id,
+        title: session.taskTitle,
+        start: session.startTime,
+        end: session.endTime,
+        type: 'ai-suggested' as const,
+        description: session.reasoning,
+      }))
+      
+      // Merge with existing calendar events
+      try {
+        if (setEvents && typeof setEvents === 'function') {
+          setEvents(prev => [...prev, ...calendarEvents])
+          console.log('Successfully added events to calendar')
+        } else {
+          console.warn('setEvents function not available')
+        }
+      } catch (error) {
+        console.error('Error adding events to calendar:', error)
+      }
+      
+      // Show calendar view
+      setShowCalendarView(true)
+      setIsGenerating(false)
+    } catch (error) {
+      console.error('Error generating schedule:', error)
+      alert('Error generating schedule. Please try again.')
+      setIsGenerating(false)
+    }
   }
 
   const approveSession = (sessionId: string) => {
@@ -207,6 +314,24 @@ export function AIScheduler() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Dialog open={showTaskSelection} onOpenChange={setShowTaskSelection}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Select Tasks ({getSelectedTasks().length})
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+                  <DialogHeader>
+                    <DialogTitle>Select Tasks for AI Scheduling</DialogTitle>
+                    <DialogDescription>
+                      Choose which tasks you want the AI to schedule study sessions for. Selected tasks will be moved to the AI Scheduler and hidden from the Tasks section.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <TaskSelectionDialog onClose={() => setShowTaskSelection(false)} />
+                </DialogContent>
+              </Dialog>
+              
               <Button variant="outline" size="sm" onClick={() => setShowSettings(!showSettings)}>
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
@@ -373,6 +498,121 @@ export function AIScheduler() {
                 </div>
               </div>
             </div>
+
+            {/* Algorithm Selection */}
+            <div className="space-y-4">
+              <Label className="text-sm font-medium">Scheduling Algorithm</Label>
+              <Select
+                value={preferences.algorithm}
+                onValueChange={(value: 'priority' | 'deadline' | 'energy' | 'balanced') =>
+                  setPreferences({ ...preferences, algorithm: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="priority">
+                    <div className="flex items-center gap-2">
+                      <Target className="h-4 w-4 text-red-500" />
+                      <div>
+                        <div className="font-medium">Priority-Based</div>
+                        <div className="text-xs text-muted-foreground">Greedy algorithm for critical tasks</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="deadline">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-orange-500" />
+                      <div>
+                        <div className="font-medium">Deadline-Driven</div>
+                        <div className="text-xs text-muted-foreground">Earliest deadline first</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="energy">
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-4 w-4 text-yellow-500" />
+                      <div>
+                        <div className="font-medium">Energy Optimization</div>
+                        <div className="text-xs text-muted-foreground">Human-centric productivity cycles</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="balanced">
+                    <div className="flex items-center gap-2">
+                      <Scale className="h-4 w-4 text-purple-500" />
+                      <div>
+                        <div className="font-medium">Balanced AI</div>
+                        <div className="text-xs text-muted-foreground">Multi-criteria decision analysis</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Choose how the AI prioritizes and schedules your tasks. Each algorithm uses different strategies for optimal results.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Selected Tasks Board */}
+      {getSelectedTasks().length > 0 && (
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Selected Tasks for AI Scheduling
+            </CardTitle>
+            <CardDescription>
+              Tasks that will be included in the AI-generated study schedule
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {getSelectedTasks().map((task) => {
+                const daysUntilDue = Math.ceil((task.dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                return (
+                  <div key={task.id} className="border rounded-lg p-3 bg-white">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm truncate">{task.title}</h4>
+                        {task.course && (
+                          <p className="text-xs text-gray-600">{task.course}</p>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => toggleTaskSelection(task.id)}
+                        className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
+                      >
+                        ×
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span className={cn(
+                        daysUntilDue < 0 ? "text-red-600" : 
+                        daysUntilDue <= 1 ? "text-orange-600" : 
+                        "text-gray-600"
+                      )}>
+                        {daysUntilDue < 0 
+                          ? `${Math.abs(daysUntilDue)} days overdue`
+                          : daysUntilDue === 0 
+                            ? "Due today"
+                            : `${daysUntilDue} days left`
+                        }
+                      </span>
+                      <Badge variant="outline" className="text-xs">
+                        {task.priority}
+                      </Badge>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </CardContent>
         </Card>
       )}
@@ -435,6 +675,108 @@ export function AIScheduler() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Calendar View */}
+      {showCalendarView && studySessions.length > 0 && (
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Generated Schedule</CardTitle>
+                <CardDescription>Review and approve your AI-generated study schedule</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowCalendarView(false)}
+                >
+                  Hide Calendar
+                </Button>
+                <Button 
+                  size="sm"
+                  onClick={() => {
+                    // Approve all sessions
+                    setStudySessions(prev => 
+                      prev.map(session => ({ ...session, status: "approved" as const }))
+                    )
+                    // Clear selected tasks from scheduling
+                    const selectedTasks = getSelectedTasks()
+                    selectedTasks.forEach(task => {
+                      toggleTaskSelection(task.id)
+                    })
+                    setShowCalendarView(false)
+                  }}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Approve All
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-200 rounded"></div>
+                  <span>Existing Events</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-yellow-200 rounded"></div>
+                  <span>AI Suggested</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-200 rounded"></div>
+                  <span>Approved</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Mini Calendar View */}
+            <div className="border rounded-lg p-4 bg-white">
+              <div className="text-sm text-gray-600 mb-3">
+                {studySessions.length} study session{studySessions.length !== 1 ? 's' : ''} generated
+              </div>
+              <div className="space-y-2">
+                {studySessions.map((session) => (
+                  <div key={session.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="font-medium">{session.taskTitle}</div>
+                      <div className="text-sm text-gray-600">
+                        {session.startTime.toLocaleDateString()} • {session.startTime.toLocaleTimeString()} - {session.endTime.toLocaleTimeString()}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">{session.reasoning}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={getSessionStatusColor(session.status)}>
+                        {session.status}
+                      </Badge>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => approveSession(session.id)}
+                          disabled={session.status === "approved" || session.status === "scheduled"}
+                        >
+                          <CheckCircle2 className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => removeSession(session.id)}
+                        >
+                          <AlertCircle className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Study Sessions */}
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
@@ -613,6 +955,185 @@ export function AIScheduler() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  )
+}
+
+// Task Selection Dialog Component
+function TaskSelectionDialog({ onClose }: { onClose: () => void }) {
+  const { tasks, toggleTaskSelection, getSelectedTasks } = useTasks()
+  const [filter, setFilter] = useState<"all" | "todo" | "in-progress">("all")
+  const [priorityFilter, setPriorityFilter] = useState<"all" | "high" | "medium" | "low">("all")
+
+  const getDaysUntilDue = (dueDate: Date) => {
+    const now = new Date()
+    const diffTime = dueDate.getTime() - now.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays
+  }
+
+  const filteredTasks = tasks.filter(task => {
+    if (filter !== "all" && task.status !== filter) return false
+    if (priorityFilter !== "all" && task.priority !== priorityFilter) return false
+    if (task.status === "completed") return false
+    
+    // Don't show overdue tasks
+    const daysUntilDue = getDaysUntilDue(task.dueDate)
+    if (daysUntilDue < 0) return false
+    
+    return true
+  })
+
+  const selectedTasks = getSelectedTasks()
+
+  // Debug logging
+  console.log('TaskSelectionDialog - Total tasks:', tasks.length)
+  console.log('TaskSelectionDialog - Filtered tasks:', filteredTasks.length)
+  console.log('TaskSelectionDialog - Selected tasks:', selectedTasks.length)
+
+  const getPriorityColor = (priority: Task["priority"]) => {
+    switch (priority) {
+      case "high":
+        return "bg-red-100 text-red-800 border-red-200"
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      case "low":
+        return "bg-blue-100 text-blue-800 border-blue-200"
+    }
+  }
+
+  const getTypeIcon = (type: Task["type"]) => {
+    switch (type) {
+      case "assignment":
+        return <BookOpen className="h-4 w-4" />
+      case "study":
+        return <Brain className="h-4 w-4" />
+      case "personal":
+        return <Clock className="h-4 w-4" />
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex gap-4">
+        <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="todo">To Do</SelectItem>
+            <SelectItem value="in-progress">In Progress</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={priorityFilter} onValueChange={(value: any) => setPriorityFilter(value)}>
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder="Priority" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Priority</SelectItem>
+            <SelectItem value="high">High</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="low">Low</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Selected Tasks Summary */}
+      {selectedTasks.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle2 className="h-4 w-4 text-blue-600" />
+            <span className="font-medium text-blue-800">
+              {selectedTasks.length} task{selectedTasks.length !== 1 ? 's' : ''} selected
+            </span>
+          </div>
+          <div className="text-sm text-blue-700">
+            {selectedTasks.map(task => task.title).join(", ")}
+          </div>
+        </div>
+      )}
+
+      {/* Task List */}
+      <div className="space-y-2 max-h-96 overflow-y-auto">
+        {filteredTasks.map((task) => {
+          const daysUntilDue = getDaysUntilDue(task.dueDate)
+          const isSelected = task.selectedForScheduling
+
+          return (
+            <div
+              key={task.id}
+              className={cn(
+                "flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors",
+                isSelected ? "bg-blue-50 border-blue-200" : "hover:bg-gray-50"
+              )}
+              onClick={() => toggleTaskSelection(task.id)}
+            >
+              <Checkbox checked={isSelected} onChange={() => {}} />
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  {getTypeIcon(task.type)}
+                  <span className="font-medium truncate">{task.title}</span>
+                  {task.isStarred && <Star className="h-4 w-4 text-yellow-500 fill-current" />}
+                </div>
+                
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                    {task.priority}
+                  </Badge>
+                  <span>Due: {task.dueDate.toLocaleDateString()}</span>
+                  <span className={cn(
+                    daysUntilDue < 0 ? "text-red-600" : 
+                    daysUntilDue <= 1 ? "text-orange-600" : 
+                    "text-gray-600"
+                  )}>
+                    ({daysUntilDue < 0 ? "Overdue" : daysUntilDue === 0 ? "Due today" : `${daysUntilDue} days left`})
+                  </span>
+                  {task.estimatedHours && (
+                    <span>• {task.estimatedHours}h estimated</span>
+                  )}
+                </div>
+                
+                {task.description && (
+                  <p className="text-sm text-gray-500 mt-1 line-clamp-2">{task.description}</p>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {filteredTasks.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          <div className="space-y-2">
+            <p className="font-medium">No tasks available for scheduling</p>
+            <p className="text-sm">
+              {tasks.length === 0 
+                ? "Create some tasks first in the Tasks section"
+                : "Try adjusting your filters or check if tasks are overdue"
+              }
+            </p>
+            {tasks.length > 0 && (
+              <p className="text-xs text-gray-400">
+                Total tasks: {tasks.length} | Filtered: {filteredTasks.length}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className="flex justify-end gap-2 pt-4 border-t">
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button onClick={onClose} className="bg-primary hover:bg-primary/90">
+          Done ({selectedTasks.length} selected)
+        </Button>
+      </div>
     </div>
   )
 }

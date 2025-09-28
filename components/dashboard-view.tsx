@@ -9,13 +9,15 @@ import { CalendarView } from "@/components/calendar-view"
 import { TaskList } from "@/components/task-list"
 import { AIScheduler } from "@/components/ai-scheduler"
 import { WelcomeTour } from "@/components/welcome-tour"
+import { TaskProvider } from "@/lib/task-context"
 
 export function DashboardView() {
   const [activeView, setActiveView] = useState("calendar")
   const [showWelcomeTour, setShowWelcomeTour] = useState(true)
 
   return (
-    <div className="min-h-screen clean-bg">
+    <TaskProvider>
+      <div className="min-h-screen clean-bg">
       <header className="border-b border-border/30 glass-effect sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
@@ -151,6 +153,7 @@ export function DashboardView() {
 
       {/* Welcome Tour */}
       {showWelcomeTour && <WelcomeTour onComplete={() => setShowWelcomeTour(false)} />}
-    </div>
+      </div>
+    </TaskProvider>
   )
 }

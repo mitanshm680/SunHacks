@@ -7,9 +7,11 @@ export type CalendarEvent = {
   title: string
   start: Date
   end: Date
-  type: 'assignment' | 'study' | 'personal' | 'ai-suggested'
+  type: 'assignment' | 'study' | 'personal' | 'ai-suggested' | 'work'
   course?: string
   description?: string
+  calendarName?: string
+  calendarId?: string
 }
 
 type CalendarContextType = {

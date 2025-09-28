@@ -5,19 +5,12 @@ import { Button } from "@/components/ui/button"
 import { useCalendar } from '@/lib/calendar-context'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, Plus, Clock, BookOpen, Brain } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus, Clock, BookOpen, Brain, Calendar } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { CanvasFeedManager } from './canvas-feed-manager'
 
-interface CalendarEvent {
-  id: string
-  title: string
-  start: Date
-  end: Date
-  type: "assignment" | "study" | "personal" | "ai-suggested"
-  course?: string
-  description?: string
-}
+// Use the CalendarEvent type from the context instead of defining our own
+import { CalendarEvent } from '@/lib/calendar-context'
 
 const mockEvents: CalendarEvent[] = [
   {
@@ -54,6 +47,15 @@ const mockEvents: CalendarEvent[] = [
   },
 ]
 
+// Event layout calculation interface
+interface EventLayout {
+  event: CalendarEvent
+  column: number
+  totalColumns: number
+  top: number
+  height: number
+}
+
 export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState<"week" | "month">("week")
@@ -83,7 +85,6 @@ export function CalendarView() {
     const startDate = new Date(firstDay)
     const endDate = new Date(lastDay)
 
-    // Adjust to start from Sunday
     startDate.setDate(startDate.getDate() - startDate.getDay())
     endDate.setDate(endDate.getDate() + (6 - endDate.getDay()))
 
@@ -106,15 +107,17 @@ export function CalendarView() {
   const getEventTypeColor = (type: CalendarEvent["type"]) => {
     switch (type) {
       case "assignment":
-        return "bg-app-peach/20 text-app-black border-app-peach/30"
+        return "bg-orange-100 text-orange-900 border-orange-200"
       case "study":
-        return "bg-app-blue/20 text-app-black border-app-blue/30"
+        return "bg-blue-100 text-blue-900 border-blue-200"
       case "ai-suggested":
-        return "bg-primary/20 text-primary-foreground border-primary/30"
+        return "bg-purple-100 text-purple-900 border-purple-200"
       case "personal":
-        return "bg-app-yellow/20 text-app-black border-app-yellow/30"
+        return "bg-green-100 text-green-900 border-green-200"
+      case "work":
+        return "bg-red-100 text-red-900 border-red-200"
       default:
-        return "bg-app-cream/20 text-app-black border-app-cream/30"
+        return "bg-gray-100 text-gray-900 border-gray-200"
     }
   }
 
@@ -126,6 +129,8 @@ export function CalendarView() {
         return <Clock className="h-3 w-3" />
       case "ai-suggested":
         return <Brain className="h-3 w-3" />
+      case "work":
+        return <Calendar className="h-3 w-3" />
       default:
         return <Clock className="h-3 w-3" />
     }
@@ -152,8 +157,99 @@ export function CalendarView() {
     }
   }
 
+  // Calculate proper event layouts with overlap handling
+  const calculateEventLayouts = (dayEvents: CalendarEvent[], startHour: number): EventLayout[] => {
+    if (dayEvents.length === 0) return []
+
+    const layouts: EventLayout[] = []
+    const pixelsPerMinute = 1.2
+    const hourHeight = 60 * pixelsPerMinute
+
+    // Sort events by start time
+    const sortedEvents = [...dayEvents].sort((a, b) => a.start.getTime() - b.start.getTime())
+
+    // Group overlapping events
+    const eventGroups: CalendarEvent[][] = []
+    
+    for (const event of sortedEvents) {
+      let addedToGroup = false
+      
+      for (const group of eventGroups) {
+        // Check if this event overlaps with any event in the group
+        const overlaps = group.some(groupEvent => 
+          event.start < groupEvent.end && event.end > groupEvent.start
+        )
+        
+        if (overlaps) {
+          group.push(event)
+          addedToGroup = true
+          break
+        }
+      }
+      
+      if (!addedToGroup) {
+        eventGroups.push([event])
+      }
+    }
+
+    // Calculate layouts for each group
+    eventGroups.forEach(group => {
+      const totalColumns = group.length
+      
+      group.forEach((event, index) => {
+        const startMinutes = (event.start.getHours() - startHour) * 60 + event.start.getMinutes()
+        const durationMinutes = (event.end.getTime() - event.start.getTime()) / 60000
+        
+        // FIXED: Detect single-time events and give them short duration
+        const isSingleTimeEvent = durationMinutes < 5 || 
+                                 durationMinutes === 0 || 
+                                 event.title.toLowerCase().includes('home') ||
+                                 event.title.toLowerCase().includes('pay') ||
+                                 event.title.toLowerCase().includes('rent') ||
+                                 event.title.toLowerCase().includes('quick')
+        const adjustedDurationMinutes = isSingleTimeEvent ? 3 : durationMinutes // 3 minutes for single-time events
+        
+        const top = Math.max(0, startMinutes * pixelsPerMinute)
+        const height = Math.max(40, adjustedDurationMinutes * pixelsPerMinute) // Minimum 40px for short events
+        
+        layouts.push({
+          event,
+          column: index,
+          totalColumns,
+          top,
+          height
+        })
+      })
+    })
+
+    return layouts
+  }
+
+  // Get visible time range based on events
+  const getVisibleRange = (eventsForDay: CalendarEvent[]) => {
+    if (!eventsForDay || eventsForDay.length === 0) {
+      return { startHour: 9, endHour: 17 } // Default business hours
+    }
+    
+    const earliest = Math.min(...eventsForDay.map(e => e.start.getHours()))
+    const latest = Math.max(...eventsForDay.map(e => e.end.getHours()))
+    
+    // Add padding and ensure reasonable bounds
+    return { 
+      startHour: Math.max(6, earliest - 1), 
+      endHour: Math.min(23, latest + 1) 
+    }
+  }
+
   const weekDays = view === "week" ? getWeekDays(currentDate) : []
   const monthDays = view === "month" ? getMonthDays(currentDate) : []
+
+  // Calculate global time range for consistent layout across all days
+  const allWeekEvents = weekDays.flatMap(day => getEventsForDay(day))
+  const globalTimeRange = getVisibleRange(allWeekEvents)
+  const totalHours = globalTimeRange.endHour - globalTimeRange.startHour
+  const pixelsPerMinute = 1.2
+  const totalHeight = totalHours * 60 * pixelsPerMinute
 
   return (
     <div className="space-y-4">
@@ -203,86 +299,155 @@ export function CalendarView() {
       <Card className="glass-effect">
         <CardContent className="p-0">
           {view === "week" ? (
-            <div className="grid grid-cols-8 min-h-[500px]">
-              {/* Time column */}
-              <div className="border-r border-border/30 p-2">
-                <div className="h-10 border-b border-border/20"></div>
-                {Array.from({ length: 12 }, (_, i) => (
-                  <div key={i} className="h-10 border-b border-border/20 text-xs text-muted-foreground p-1">
-                    {i + 8}:00
-                  </div>
-                ))}
-              </div>
-
-              {/* Day columns */}
-              {weekDays.map((day, dayIndex) => (
-                <div key={dayIndex} className="border-r border-border/30 last:border-r-0">
-                  {/* Day header */}
-                  <div className="h-10 border-b border-border/30 p-2 bg-muted/20">
+            <div className="flex flex-col">
+              {/* Week view header */}
+              <div className="flex border-b border-border/30 bg-muted/20 sticky top-0 z-30">
+                {/* Time column header */}
+                <div className="w-20 flex-shrink-0 p-3 border-r border-border/30">
+                  <div className="text-xs text-muted-foreground">Time</div>
+                </div>
+                
+                {/* Day headers */}
+                {weekDays.map((day, dayIndex) => (
+                  <div key={dayIndex} className="flex-1 p-3 border-r border-border/30 last:border-r-0 min-w-32">
                     <div className="text-center">
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-muted-foreground mb-1">
                         {day.toLocaleDateString("en-US", { weekday: "short" })}
                       </div>
                       <div
                         className={cn(
                           "text-sm font-medium",
                           day.toDateString() === new Date().toDateString() &&
-                            "bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center mx-auto text-xs",
+                            "bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center mx-auto"
                         )}
                       >
                         {day.getDate()}
                       </div>
                     </div>
                   </div>
+                ))}
+              </div>
 
-                  {/* Time slots */}
-                  <div className="relative">
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <div key={i} className="h-10 border-b border-border/20"></div>
-                    ))}
+              {/* Week view content - scrollable */}
+              <div className="flex overflow-y-auto" style={{ maxHeight: '70vh' }}>
+                {/* Time column */}
+                <div className="w-20 flex-shrink-0 border-r border-border/30 bg-card relative">
+                  {Array.from({ length: totalHours }, (_, i) => {
+                    const hour = globalTimeRange.startHour + i
+                    const y = i * 60 * pixelsPerMinute
+                    
+                    return (
+                      <div
+                        key={hour}
+                        className="absolute left-0 right-0 text-xs text-muted-foreground px-2 py-1 border-b border-border/10"
+                        style={{ 
+                          top: `${y}px`, 
+                          height: `${60 * pixelsPerMinute}px`,
+                          display: 'flex',
+                          alignItems: 'flex-start'
+                        }}
+                      >
+                        {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                      </div>
+                    )
+                  })}
+                  
+                  {/* Total height spacer */}
+                  <div style={{ height: `${totalHeight}px` }} />
+                </div>
 
-                    {/* Events */}
-                    {getEventsForDay(day).map((event, eventIndex) => {
-                      const startHour = event.start.getHours()
-                      const startMinute = event.start.getMinutes()
-                      const endHour = event.end.getHours()
-                      const endMinute = event.end.getMinutes()
-                      const top = (startHour - 8) * 40 + (startMinute * 40) / 60
-                      const height = (endHour - startHour) * 40 + ((endMinute - startMinute) * 40) / 60
+                {/* Day columns */}
+                {weekDays.map((day, dayIndex) => {
+                  const eventsForDay = getEventsForDay(day)
+                  const eventLayouts = calculateEventLayouts(eventsForDay, globalTimeRange.startHour)
 
-                      return (
+                  return (
+                    <div 
+                      key={dayIndex} 
+                      className="flex-1 border-r border-border/30 last:border-r-0 relative min-w-32"
+                      style={{ height: `${totalHeight}px` }}
+                    >
+                      {/* Hour grid lines */}
+                      {Array.from({ length: totalHours }, (_, i) => (
                         <div
-                          key={event.id}
-                          className={cn(
-                            "absolute left-1 right-1 rounded border p-1 cursor-pointer hover:shadow-sm transition-shadow",
-                            getEventTypeColor(event.type),
-                          )}
-                          style={{
-                            top: `${top}px`,
-                            height: `${height}px`,
-                            zIndex: 10 + eventIndex,
+                          key={i}
+                          className="absolute left-0 right-0 border-b border-border/10"
+                          style={{ 
+                            top: `${i * 60 * pixelsPerMinute}px`,
+                            height: '1px'
                           }}
-                          onClick={() => setSelectedEvent(event)}
-                        >
-                          <div className="flex items-start gap-1">
-                            {getEventIcon(event.type)}
-                            <div className="flex-1 min-w-0">
-                              <div className="text-xs font-medium truncate">{event.title}</div>
-                              <div className="text-xs opacity-75">
-                                {event.start.toLocaleTimeString("en-US", {
-                                  hour: "numeric",
-                                  minute: "2-digit",
-                                  hour12: true,
-                                })}
+                        />
+                      ))}
+
+                      {/* Events */}
+                      {eventLayouts.map(({ event, column, totalColumns, top, height }) => {
+                        const width = totalColumns === 1 ? '90%' : `${90 / totalColumns}%`
+                        const left = totalColumns === 1 ? '5%' : `${(90 / totalColumns) * column + 5}%`
+                        
+                        // Detect if this is a quick task (single-time event)
+                        const durationMinutes = (event.end.getTime() - event.start.getTime()) / 60000
+                        
+                        // Enhanced detection: check duration, title patterns, and event type
+                        const isQuickTask = durationMinutes < 5 || 
+                                          durationMinutes === 0 || 
+                                          event.title.toLowerCase().includes('home') ||
+                                          event.title.toLowerCase().includes('pay') ||
+                                          event.title.toLowerCase().includes('rent') ||
+                                          event.title.toLowerCase().includes('quick')
+                        
+                        // DEBUG: Log event details for debugging
+                        console.log(`Event: ${event.title}, Duration: ${durationMinutes}min, IsQuick: ${isQuickTask}`)
+
+                        return (
+                          <div
+                            key={event.id}
+                            className={cn(
+                              "absolute rounded-lg border cursor-pointer hover:shadow-md transition-shadow",
+                              "p-3 overflow-hidden",
+                              isQuickTask && "border-dashed border-2", // Dashed border for quick tasks
+                              getEventTypeColor(event.type)
+                            )}
+                            style={{
+                              top: `${top}px`,
+                              left,
+                              width,
+                              height: `${height}px`,
+                              minHeight: isQuickTask ? '40px' : '80px', // Smaller min height for quick tasks
+                              zIndex: 20 + column
+                            }}
+                            onClick={() => setSelectedEvent(event)}
+                          >
+                            <div className="flex items-start gap-2 h-full">
+                              <div className="flex-shrink-0 mt-0.5">
+                                {getEventIcon(event.type)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-sm leading-tight mb-1 break-words">
+                                  {event.title}
+                                  {isQuickTask && <span className="text-xs opacity-60 ml-1">(quick)</span>}
+                                </div>
+                                <div className="text-xs opacity-80 mb-1">
+                                  {event.start.toLocaleTimeString('en-US', { 
+                                    hour: 'numeric', 
+                                    minute: '2-digit',
+                                    hour12: true 
+                                  })}
+                                  {isQuickTask && <span className="ml-1 text-xs opacity-60">(3min)</span>}
+                                </div>
+                                {event.course && (
+                                  <div className="text-xs opacity-70 truncate">
+                                    {event.course}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              ))}
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-7">
@@ -307,37 +472,37 @@ export function CalendarView() {
                     key={dayIndex}
                     className={cn(
                       "min-h-[120px] p-2 border-b border-r border-border/50 last:border-r-0",
-                      !isCurrentMonth && "bg-muted/20 text-muted-foreground",
+                      !isCurrentMonth && "bg-muted/20 text-muted-foreground"
                     )}
                   >
                     <div
                       className={cn(
                         "text-sm font-medium mb-1",
                         isToday &&
-                          "bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center",
+                          "bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center"
                       )}
                     >
                       {day.getDate()}
                     </div>
                     <div className="space-y-1">
                       {dayEvents.slice(0, 3).map((event) => (
-                        <Badge
+                        <div
                           key={event.id}
-                          variant="secondary"
                           className={cn(
-                            "text-xs px-1 py-0 h-5 cursor-pointer hover:opacity-80 block truncate",
-                            getEventTypeColor(event.type),
+                            "text-xs px-2 py-1 rounded cursor-pointer hover:opacity-80 transition-opacity",
+                            "flex items-center gap-1 min-h-[24px] overflow-hidden",
+                            getEventTypeColor(event.type)
                           )}
                           onClick={() => setSelectedEvent(event)}
                         >
-                          <div className="flex items-center gap-1">
-                            {getEventIcon(event.type)}
-                            <span className="truncate">{event.title}</span>
-                          </div>
-                        </Badge>
+                          <div className="flex-shrink-0">{getEventIcon(event.type)}</div>
+                          <span className="truncate font-medium">{event.title}</span>
+                        </div>
                       ))}
                       {dayEvents.length > 3 && (
-                        <div className="text-xs text-muted-foreground">+{dayEvents.length - 3} more</div>
+                        <div className="text-xs text-muted-foreground px-1">
+                          +{dayEvents.length - 3} more
+                        </div>
                       )}
                     </div>
                   </div>
@@ -348,7 +513,7 @@ export function CalendarView() {
         </CardContent>
       </Card>
 
-      {/* Event Details Modal */}
+      {/* Event Details Modal - unchanged */}
       {selectedEvent && (
         <Card className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-96 z-50 border-border/50 bg-card/95 backdrop-blur-sm shadow-xl">
           <CardHeader>

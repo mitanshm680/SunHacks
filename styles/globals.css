@@ -123,3 +123,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Calendar-specific helpers */
+.calendar-scrollable {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.event-content {
+  word-wrap: break-word;
+  overflow: hidden;
+}
+
+.event-description {
+  max-height: 6rem;
+  overflow: auto;
+}
