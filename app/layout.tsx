@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
+import { CalendarProvider } from "@/lib/calendar-context"
 import "./globals.css"
 
 const inter = Inter({
@@ -32,8 +33,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans ${inter.variable} ${jetbrainsMono.variable} antialiased`}>
         <Suspense fallback={null}>
-          {children}
-          <Analytics />
+          <CalendarProvider>
+            {children}
+            <Analytics />
+          </CalendarProvider>
         </Suspense>
       </body>
     </html>

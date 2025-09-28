@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, CheckCircle } from "lucide-react"
+import GoogleCalendarConnect from "./google-calendar-connect"
+import { CanvasFeedManager } from './canvas-feed-manager'
 
 interface AuthModalProps {
   isOpen: boolean
@@ -13,17 +15,12 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, onAuthenticated }: AuthModalProps) {
-  const [step, setStep] = useState<"welcome" | "google" | "complete">("welcome")
+  const [step, setStep] = useState<"welcome" | "google" | "canvas" | "complete">("welcome")
   const [googleConnected, setGoogleConnected] = useState(false)
+  const [canvasAdded, setCanvasAdded] = useState(false)
 
   const handleGoogleConnect = () => {
-    // Simulate Google OAuth flow
-    setTimeout(() => {
-      setGoogleConnected(true)
-      if (step === "google") {
-        setStep("complete")
-      }
-    }, 1000)
+    // This is replaced by the real GoogleCalendarConnect component below
   }
 
   const handleComplete = () => {
@@ -80,25 +77,37 @@ export function AuthModal({ isOpen, onClose, onAuthenticated }: AuthModalProps) 
                   <li>• Find available time slots</li>
                 </ul>
               </div>
-              <Button
-                onClick={handleGoogleConnect}
-                className="w-full bg-primary hover:bg-primary/90"
-                disabled={googleConnected}
-              >
-                {googleConnected ? (
-                  <>
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Connected to Google Calendar
-                  </>
-                ) : (
-                  "Connect Google Calendar"
-                )}
-              </Button>
-              {googleConnected && (
-                <Button onClick={() => setStep("complete")} className="w-full" variant="outline">
-                  Continue
-                </Button>
-              )}
+              <GoogleCalendarConnect
+                onConnected={() => {
+                  setGoogleConnected(true)
+                  // move to canvas step after Google is connected
+                  setStep('canvas')
+                }}
+              />
+            </div>
+          </>
+        )}
+
+        {step === "canvas" && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                Add your Canvas calendar
+              </DialogTitle>
+              <DialogDescription>Paste your Canvas iCal link so we can import course events</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <CanvasFeedManager
+                onSaved={(url) => {
+                  setCanvasAdded(true)
+                  setStep('complete')
+                }}
+                onImported={() => {
+                  setCanvasAdded(true)
+                  setStep('complete')
+                }}
+              />
             </div>
           </>
         )}

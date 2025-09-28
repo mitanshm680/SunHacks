@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -34,23 +32,7 @@ import {
   Star,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-interface Task {
-  id: string
-  title: string
-  description?: string
-  dueDate: Date
-  priority: "low" | "medium" | "high"
-  status: "todo" | "in-progress" | "completed"
-  type: "assignment" | "personal" | "study"
-  course?: string
-  estimatedHours?: number
-  completedHours?: number
-  tags: string[]
-  isStarred: boolean
-  createdAt: Date
-  source?: "manual"
-}
+import { useTasks, Task } from "@/lib/task-context"
 
 const mockTasks: Task[] = [
   {
@@ -119,8 +101,9 @@ const mockTasks: Task[] = [
 ]
 
 export function TaskList() {
-  const [tasks, setTasks] = useState<Task[]>(mockTasks)
+  const { tasks, addTask, updateTask, deleteTask } = useTasks()
   const [filter, setFilter] = useState<"all" | "todo" | "in-progress" | "completed">("all")
+  const [showOverdue, setShowOverdue] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false)
@@ -177,6 +160,13 @@ export function TaskList() {
     .filter((task) => {
       if (filter !== "all" && task.status !== filter) return false
       if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase())) return false
+      // Hide tasks that are selected for AI scheduling
+      if (task.selectedForScheduling) return false
+      
+      // Hide overdue tasks unless showOverdue is enabled
+      const daysUntilDue = getDaysUntilDue(task.dueDate)
+      if (daysUntilDue < 0 && !showOverdue) return false
+      
       return true
     })
     .sort((a, b) => {
@@ -194,23 +184,21 @@ export function TaskList() {
     })
 
   const toggleTaskStatus = (taskId: string) => {
-    setTasks((prev) =>
-      prev.map((task) => {
-        if (task.id === taskId) {
-          const newStatus = task.status === "completed" ? "todo" : task.status === "todo" ? "in-progress" : "completed"
-          return {
-            ...task,
-            status: newStatus,
-            completedHours: newStatus === "completed" ? task.estimatedHours || 0 : task.completedHours,
-          }
-        }
-        return task
-      }),
-    )
+    const task = tasks.find(t => t.id === taskId)
+    if (task) {
+      const newStatus = task.status === "completed" ? "todo" : task.status === "todo" ? "in-progress" : "completed"
+      updateTask(taskId, {
+        status: newStatus,
+        completedHours: newStatus === "completed" ? task.estimatedHours || 0 : task.completedHours,
+      })
+    }
   }
 
   const toggleStar = (taskId: string) => {
-    setTasks((prev) => prev.map((task) => (task.id === taskId ? { ...task, isStarred: !task.isStarred } : task)))
+    const task = tasks.find(t => t.id === taskId)
+    if (task) {
+      updateTask(taskId, { isStarred: !task.isStarred })
+    }
   }
 
   const getTaskStats = () => {
@@ -223,6 +211,7 @@ export function TaskList() {
   }
 
   const stats = getTaskStats()
+
 
   return (
     <div className="space-y-6">
@@ -305,7 +294,7 @@ export function TaskList() {
                   </DialogHeader>
                   <AddTaskForm
                     onClose={() => setIsAddTaskOpen(false)}
-                    onAdd={(task) => setTasks((prev) => [...prev, task])}
+                    onAdd={addTask}
                   />
                 </DialogContent>
               </Dialog>
@@ -333,6 +322,16 @@ export function TaskList() {
                 </SelectContent>
               </Select>
 
+              <Button
+                variant={showOverdue ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowOverdue(!showOverdue)}
+                className="flex items-center gap-2"
+              >
+                <AlertCircle className="h-4 w-4" />
+                {showOverdue ? "Hide Overdue" : "Show Overdue"}
+              </Button>
+
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -348,6 +347,18 @@ export function TaskList() {
           </div>
         </CardHeader>
       </Card>
+
+      {/* Overdue Tasks Message */}
+      {!showOverdue && tasks.some(task => getDaysUntilDue(task.dueDate) < 0) && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-orange-600" />
+            <span className="text-sm text-orange-800">
+              Overdue tasks are hidden. Click "Show Overdue" to view them.
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Task List */}
       <div className="space-y-3">
@@ -487,11 +498,11 @@ export function TaskList() {
           task={selectedTask}
           onClose={() => setSelectedTask(null)}
           onUpdate={(updatedTask) => {
-            setTasks((prev) => prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)))
+            updateTask(updatedTask.id, updatedTask)
             setSelectedTask(null)
           }}
           onDelete={(taskId) => {
-            setTasks((prev) => prev.filter((t) => t.id !== taskId))
+            deleteTask(taskId)
             setSelectedTask(null)
           }}
         />
@@ -677,9 +688,16 @@ function TaskDetailModal({
   onUpdate: (task: Task) => void
   onDelete: (taskId: string) => void
 }) {
+  const { toggleTaskSelection } = useTasks()
   const [isEditing, setIsEditing] = useState(false)
+  const [isScheduled, setIsScheduled] = useState(task.selectedForScheduling || false)
   const daysUntilDue = Math.ceil((task.dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
   const progress = task.estimatedHours ? ((task.completedHours || 0) / task.estimatedHours) * 100 : 0
+
+  const handleScheduleStudyTime = () => {
+    toggleTaskSelection(task.id)
+    setIsScheduled(!isScheduled)
+  }
 
   return (
     <>
@@ -789,8 +807,12 @@ function TaskDetailModal({
           )}
 
           <div className="flex gap-2 pt-4">
-            <Button size="sm" className="flex-1 bg-primary hover:bg-primary/90">
-              Schedule Study Time
+            <Button 
+              size="sm" 
+              className={`flex-1 ${isScheduled ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-primary/90'}`}
+              onClick={handleScheduleStudyTime}
+            >
+              {isScheduled ? '✓ Added to AI Scheduler' : 'Schedule Study Time'}
             </Button>
             <Button size="sm" variant="outline" className="flex-1 bg-transparent">
               Mark Complete
