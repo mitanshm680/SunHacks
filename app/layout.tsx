@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "StudySync - Smart AI Schedule Planner",
+  title: "Plz_use_it - Smart AI Schedule Planner",
   description: "AI-powered schedule planner for students with Google Calendar integration",
   generator: "v0.app",
 }

@@ -29,20 +29,13 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <Brain className="h-5 w-5 text-primary-foreground" />
-              </div>
+              
               <div>
                 <h1 className="text-lg font-bold text-foreground">Plz_Use_It</h1>
                 <p className="text-xs text-muted-foreground">AI Study Planner</p>
               </div>
             </div>
-            <Button
-              onClick={() => setShowAuthModal(true)}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              Get Started
-            </Button>
+            
           </div>
         </div>
       </header>
@@ -53,7 +46,7 @@ export default function HomePage() {
             <img 
               src="/mascot.png" 
               alt="Plz_Use_It Mascot" 
-              className="w-32 h-32 mx-auto mb-4"
+              className="w-60 h-32 mx-auto mb-4"
             />
           </div>
           <h2 className="text-3xl md:text-5xl font-bold text-balance mb-4">
